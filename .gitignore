@@ -28,3 +28,7 @@ dist-ssr
 .idea/
 # Playwright MCP artifacts
 .playwright-mcp/
+
+# Android signing keys — never commit
+*.jks
+*.keystore

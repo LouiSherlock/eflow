@@ -28,7 +28,7 @@
     var(--native-safe-area-right)
   );
 
-  --tabbar-height: 60px;
+  --tabbar-height: 4rem;
 }
 
 html,
@@ -202,39 +202,85 @@ body {
 }
 
 .app-content.has-tabbar {
-  padding-bottom: calc(var(--tabbar-height) + var(--safe-bottom));
+  padding-bottom: calc(
+    var(--tabbar-height) + var(--safe-bottom) + var(--spacing-6)
+  );
 }
 
-/* The bar's background extends behind the gesture area; its content does not. */
+/* Immersive pages (reader) go edge-to-edge, keeping only the hardware insets. */
+.app-content.immersive-content {
+  padding-inline: var(--safe-left) var(--safe-right);
+}
+
+/*
+ * Floating pill navigation, following the Android 17 era Material treatment:
+ * a detached, fully rounded container with icon-over-label destinations and a
+ * filled pill behind the current one.
+ */
 .app-tabbar {
   position: fixed;
   z-index: 100;
-  inset-inline: 0;
-  bottom: 0;
-
-  height: calc(var(--tabbar-height) + var(--safe-bottom));
-  padding-bottom: var(--safe-bottom);
-  padding-inline: calc(var(--safe-left) + var(--spacing-4))
+  inset-inline: calc(var(--safe-left) + var(--spacing-4))
     calc(var(--safe-right) + var(--spacing-4));
+  bottom: calc(var(--safe-bottom) + var(--spacing-3));
+  max-width: 30rem;
+  margin-inline: auto;
+
+  height: var(--tabbar-height);
+  padding: var(--spacing-1);
 
   background: var(--color-background-surface, light-dark(#ffffff, #1b1b1b));
-  border-top: 1px solid var(--color-border, light-dark(#e5e5e5, #333333));
+  border: 1px solid var(--color-border, light-dark(#e5e5e5, #333333));
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-high);
 }
 
 .app-tab-link {
+  position: relative;
   display: flex;
   flex: 1;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  border-radius: var(--radius-control);
-  padding-block: var(--spacing-2);
+  gap: var(--spacing-0-5);
+  height: 100%;
+  border-radius: var(--radius-full);
   color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: 1.1;
   text-decoration: none;
+  transition: color 150ms ease;
+}
+
+/* Shared element that slides between destinations; Motion owns its position. */
+.app-tab-indicator {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: var(--radius-full);
+  background-color: var(--color-accent-muted);
+  pointer-events: none;
+}
+
+.app-tab-link > svg,
+.app-tab-link > .astryx-text {
+  position: relative;
+  z-index: 1;
 }
 
 .app-tab-link[aria-current="page"] {
   color: var(--color-accent);
   font-weight: var(--font-weight-semibold);
-  background-color: var(--color-accent-muted);
+}
+
+@media (hover: hover) {
+  .app-tab-link:hover:not([aria-current="page"]) {
+    background-color: color-mix(
+      in srgb,
+      var(--color-text-secondary) 8%,
+      transparent
+    );
+  }
 }
 
 .safe-top {

@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { AlertDialog } from "@astryxdesign/core/AlertDialog";
 import { Button } from "@astryxdesign/core/Button";
 import { Card } from "@astryxdesign/core/Card";
 import { Heading } from "@astryxdesign/core/Heading";
@@ -23,7 +24,7 @@ function Cover({ book, variant = "grid" }: { book: Book; variant?: "grid" | "her
     return () => URL.revokeObjectURL(nextUrl);
   }, [book.cover]);
   return <section className={`book-cover book-cover-${variant}`} aria-label={`${book.title} 封面`}>
-    {url ? <img src={url} alt="" /> : <VStack className="cover-fallback" align="center" justify="between" gap={2}><Text type="supporting">{book.format}</Text><Heading level={3}>{book.title.slice(0, 1)}</Heading><Text type="supporting">纸间</Text></VStack>}
+    {url ? <img src={url} alt="" /> : <VStack className="cover-fallback" align="center" justify="between" gap={2}><Text type="supporting" color="inherit">{book.format}</Text><Heading level={3} color="inherit">{book.title.slice(0, 1)}</Heading><Text type="supporting" color="inherit">纸间</Text></VStack>}
   </section>;
 }
 
@@ -33,6 +34,7 @@ function LibraryPage() {
   const [query, setQuery] = useState("");
   const [feedback, setFeedback] = useState<string>();
   const [isImporting, setIsImporting] = useState(false);
+  const [pendingRemoval, setPendingRemoval] = useState<Book>();
   useEffect(() => { void hydrate(); }, [hydrate]);
   const visibleBooks = useMemo(() => books.filter((book) => `${book.title} ${book.author}`.toLocaleLowerCase().includes(query.toLocaleLowerCase())), [books, query]);
   const recent = books.filter((book) => book.progress > 0).sort((a, b) => b.updatedAt - a.updatedAt)[0];
@@ -55,7 +57,20 @@ function LibraryPage() {
     {feedback ? <HStack className="library-feedback" align="center" justify="between" gap={2}><Text type="supporting">{feedback}</Text><IconButton label="关闭提示" variant="ghost" icon={<Icon icon={X} />} onClick={() => setFeedback(undefined)} /></HStack> : null}
     {recent ? <Link to="/book/$bookId" params={{ bookId: recent.id }} className="continue-reading"><Card className="continue-card" padding={4}><HStack align="center" gap={4}><Cover book={recent} variant="hero" /><VStack className="continue-copy" gap={2}><Text type="supporting" color="secondary">继续阅读</Text><Heading level={3}>{recent.title}</Heading><Text type="body" color="secondary">{recent.author}</Text><progress className="book-progress" value={recent.progress} max="100" /><Text type="supporting" color="secondary">已读 {Math.round(recent.progress)}%</Text></VStack></HStack></Card></Link> : null}
     <HStack align="end" justify="between" gap={3}><VStack gap={1}><Heading level={3}>{query ? "搜索结果" : "全部书籍"}</Heading><Text type="supporting" color="secondary">{isReady ? `${visibleBooks.length} 本` : "正在载入书架"}</Text></VStack>{query ? <Button label="清除" size="sm" variant="ghost" onClick={() => setQuery("")} /> : null}</HStack>
-    {visibleBooks.length ? <section className="book-grid" aria-label="书籍列表">{visibleBooks.map((book) => <Card key={book.id} className="book-card" padding={2}><VStack gap={2}><Link to="/book/$bookId" params={{ bookId: book.id }} className="book-cover-link"><Cover book={book} /></Link><HStack align="start" justify="between" gap={1}><VStack className="book-meta" gap={1}><Heading level={5}>{book.title}</Heading><Text type="supporting" color="secondary">{book.author}</Text></VStack><IconButton label={`删除《${book.title}》`} variant="ghost" size="sm" icon={<Icon icon={MoreHorizontal} />} onClick={() => { if (window.confirm(`从书架移除《${book.title}》？`)) void removeBook(book.id); }} /></HStack>{book.progress > 0 ? <progress className="book-progress" value={book.progress} max="100" /> : <Text type="supporting" color="secondary">尚未阅读</Text>}</VStack></Card>)}</section> : <Card className="empty-library" padding={5}><VStack align="center" gap={3}><Icon className="empty-icon" icon={BookOpen} /><Heading level={3}>{query ? "没有找到这本书" : "书架准备好了"}</Heading><Text type="body" color="secondary">{query ? "换个书名或作者再试试。" : "导入 EPUB 或 TXT，阅读进度会保存在本机。"}</Text>{!query ? <Button label="选择书籍" variant="primary" icon={<Icon icon={FilePlus2} />} onClick={() => fileRef.current?.click()} /> : null}</VStack></Card>}
+    {visibleBooks.length ? <section className="book-grid" aria-label="书籍列表">{visibleBooks.map((book) => <Card key={book.id} className="book-card" padding={2}><VStack gap={2}><Link to="/book/$bookId" params={{ bookId: book.id }} className="book-cover-link"><Cover book={book} /></Link><HStack align="start" justify="between" gap={1}><VStack className="book-meta" gap={1}><Heading level={5} maxLines={1}>{book.title}</Heading><Text type="supporting" color="secondary" display="block" maxLines={2}>{book.author}</Text></VStack><IconButton label={`删除《${book.title}》`} variant="ghost" size="sm" icon={<Icon icon={MoreHorizontal} />} onClick={() => setPendingRemoval(book)} /></HStack>{book.progress > 0 ? <progress className="book-progress" value={book.progress} max="100" /> : <Text type="supporting" color="secondary">尚未阅读</Text>}</VStack></Card>)}</section> : <Card className="empty-library" padding={5}><VStack align="center" gap={3}><Icon className="empty-icon" icon={BookOpen} /><Heading level={3}>{query ? "没有找到这本书" : "书架准备好了"}</Heading><Text type="body" color="secondary">{query ? "换个书名或作者再试试。" : "导入 EPUB 或 TXT，阅读进度会保存在本机。"}</Text>{!query ? <Button label="选择书籍" variant="primary" icon={<Icon icon={FilePlus2} />} onClick={() => fileRef.current?.click()} /> : null}</VStack></Card>}
     <Text type="supporting" color="secondary">EPUB 由 foliate-js 渲染；文件与封面保存在本机，不会上传。</Text>
+    <AlertDialog
+      isOpen={Boolean(pendingRemoval)}
+      onOpenChange={(isOpen) => { if (!isOpen) setPendingRemoval(undefined); }}
+      title="从书架移除？"
+      description={pendingRemoval ? `《${pendingRemoval.title}》会从本机书架删除，阅读进度也会一并清除。` : ""}
+      cancelLabel="取消"
+      actionLabel="移除"
+      onAction={() => {
+        if (!pendingRemoval) return;
+        void removeBook(pendingRemoval.id);
+        setPendingRemoval(undefined);
+      }}
+    />
   </VStack>;
 }

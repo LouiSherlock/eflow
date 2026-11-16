@@ -1,19 +1,45 @@
-import { Outlet, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
+import { Link, Outlet, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { HStack } from "@astryxdesign/core/HStack";
 import { Heading } from "@astryxdesign/core/Heading";
 import { Icon } from "@astryxdesign/core/Icon";
 import { IconButton } from "@astryxdesign/core/IconButton";
-import { Link } from "@astryxdesign/core/Link";
+import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
 import { isTauri } from "@tauri-apps/api/core";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, BookOpen, Compass, UserRound, type LucideIcon } from "lucide-react";
+import { motion } from "motion/react";
 import { DesktopTitleBar } from "./components/desktop-titlebar";
-import { ThemeSwitcher } from "./components/theme-switcher";
 import { useSystemInsets } from "./hooks/use-system-insets";
 import { useLibrary } from "./services/library";
 
 const PRIMARY_ROUTES = new Set(["/", "/discover", "/profile"]);
+const TAB_ITEMS: ReadonlyArray<{ to: "/" | "/discover" | "/profile"; label: string; icon: LucideIcon }> = [
+  { to: "/", label: "书架", icon: BookOpen },
+  { to: "/discover", label: "发现", icon: Compass },
+  { to: "/profile", label: "我的", icon: UserRound },
+];
+
+function TabItem({ item }: { item: (typeof TAB_ITEMS)[number] }) {
+  return (
+    <Link to={item.to} className="app-tab-link">
+      {({ isActive }) => (
+        <>
+          {isActive ? (
+            <motion.span
+              className="app-tab-indicator"
+              layoutId="tab-indicator"
+              transition={{ type: "spring", stiffness: 480, damping: 40 }}
+              aria-hidden="true"
+            />
+          ) : null}
+          <Icon icon={item.icon} size="md" />
+          <Text type="supporting" color="inherit">{item.label}</Text>
+        </>
+      )}
+    </Link>
+  );
+}
 const ROUTE_LABELS: Record<string, string> = {
   "/": "书架",
   "/discover": "发现",
@@ -21,6 +47,7 @@ const ROUTE_LABELS: Record<string, string> = {
   "/settings": "阅读设置",
   "/about": "关于",
   "/help": "帮助",
+  "/book/$bookId": "书籍详情",
   "/reader/$bookId": "正在阅读",
 };
 
@@ -31,10 +58,16 @@ function App() {
   const routeId = useRouterState({
     select: (state) => state.matches[state.matches.length - 1]?.routeId ?? "/",
   });
+  const routeParams = useRouterState({
+    select: (state) => state.matches[state.matches.length - 1]?.params,
+  });
   const isPrimaryRoute = PRIMARY_ROUTES.has(routeId);
   const isReaderRoute = routeId === "/reader/$bookId";
-  const isBookRoute = routeId === "/book/$bookId";
-  const isImmersiveRoute = isReaderRoute || isBookRoute;
+  const isImmersiveRoute = isReaderRoute;
+  const activeBookTitle = useLibrary((state) => {
+    const bookId = (routeParams as { bookId?: string } | undefined)?.bookId;
+    return bookId ? state.books.find((book) => book.id === bookId)?.title : undefined;
+  });
   const isDesktopRuntime =
     isTauri() &&
     typeof navigator !== "undefined" &&
@@ -63,10 +96,9 @@ function App() {
           gap={3}
         >
           <Heading level={3}>纸间</Heading>
-          <ThemeSwitcher />
         </HStack>
       ) : null}
-      {!isPrimaryRoute && !isImmersiveRoute ? (
+      {!isPrimaryRoute ? (
         <HStack
           as="header"
           className="secondary-app-bar"
@@ -80,7 +112,9 @@ function App() {
             variant="ghost"
             onClick={goBack}
           />
-          <Heading level={4}>{ROUTE_LABELS[routeId] ?? "Page"}</Heading>
+          <Heading level={4} className="secondary-app-title">
+            {isReaderRoute && activeBookTitle ? activeBookTitle : (ROUTE_LABELS[routeId] ?? "页面")}
+          </Heading>
         </HStack>
       ) : null}
 
@@ -102,15 +136,9 @@ function App() {
           gap={2}
           aria-label="Main navigation"
         >
-          <Link href="/" isStandalone className="app-tab-link">
-            书架
-          </Link>
-          <Link href="/discover" isStandalone className="app-tab-link">
-            发现
-          </Link>
-          <Link href="/profile" isStandalone className="app-tab-link">
-            我的
-          </Link>
+          {TAB_ITEMS.map((item) => (
+            <TabItem key={item.to} item={item} />
+          ))}
         </HStack>
       ) : null}
     </VStack>

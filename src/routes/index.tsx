@@ -49,7 +49,7 @@ function LibraryPage() {
 
   return <VStack className="library-page" gap={5}>
     <HStack className="library-welcome" align="end" justify="between" gap={3}>
-      <VStack gap={1}><Text className="library-greeting" type="supporting" color="secondary">今晚，读点喜欢的</Text><Heading level={1}>我的书架</Heading></VStack>
+      <VStack gap={1}> <Heading level={1}>我的书架</Heading></VStack>
       <Button label="导入" variant="primary" size="lg" isLoading={isImporting} icon={<Icon icon={FilePlus2} />} onClick={() => fileRef.current?.click()} />
       <input ref={fileRef} className="book-file-input" type="file" accept=".epub,.txt" multiple onChange={(event) => void handleImport(event.target.files)} />
     </HStack>
@@ -58,7 +58,6 @@ function LibraryPage() {
     {recent ? <Link to="/book/$bookId" params={{ bookId: recent.id }} className="continue-reading"><Card className="continue-card" padding={4}><HStack align="center" gap={4}><Cover book={recent} variant="hero" /><VStack className="continue-copy" gap={2}><Text type="supporting" color="secondary">继续阅读</Text><Heading level={3}>{recent.title}</Heading><Text type="body" color="secondary">{recent.author}</Text><progress className="book-progress" value={recent.progress} max="100" /><Text type="supporting" color="secondary">已读 {Math.round(recent.progress)}%</Text></VStack></HStack></Card></Link> : null}
     <HStack align="end" justify="between" gap={3}><VStack gap={1}><Heading level={3}>{query ? "搜索结果" : "全部书籍"}</Heading><Text type="supporting" color="secondary">{isReady ? `${visibleBooks.length} 本` : "正在载入书架"}</Text></VStack>{query ? <Button label="清除" size="sm" variant="ghost" onClick={() => setQuery("")} /> : null}</HStack>
     {visibleBooks.length ? <section className="book-grid" aria-label="书籍列表">{visibleBooks.map((book) => <Card key={book.id} className="book-card" padding={2}><VStack gap={2}><Link to="/book/$bookId" params={{ bookId: book.id }} className="book-cover-link"><Cover book={book} /></Link><HStack align="start" justify="between" gap={1}><VStack className="book-meta" gap={1}><Heading level={5} maxLines={1}>{book.title}</Heading><Text type="supporting" color="secondary" display="block" maxLines={2}>{book.author}</Text></VStack><IconButton label={`删除《${book.title}》`} variant="ghost" size="sm" icon={<Icon icon={MoreHorizontal} />} onClick={() => setPendingRemoval(book)} /></HStack>{book.progress > 0 ? <progress className="book-progress" value={book.progress} max="100" /> : <Text type="supporting" color="secondary">尚未阅读</Text>}</VStack></Card>)}</section> : <Card className="empty-library" padding={5}><VStack align="center" gap={3}><Icon className="empty-icon" icon={BookOpen} /><Heading level={3}>{query ? "没有找到这本书" : "书架准备好了"}</Heading><Text type="body" color="secondary">{query ? "换个书名或作者再试试。" : "导入 EPUB 或 TXT，阅读进度会保存在本机。"}</Text>{!query ? <Button label="选择书籍" variant="primary" icon={<Icon icon={FilePlus2} />} onClick={() => fileRef.current?.click()} /> : null}</VStack></Card>}
-    <Text type="supporting" color="secondary">EPUB 由 foliate-js 渲染；文件与封面保存在本机，不会上传。</Text>
     <AlertDialog
       isOpen={Boolean(pendingRemoval)}
       onOpenChange={(isOpen) => { if (!isOpen) setPendingRemoval(undefined); }}

@@ -1,14 +1,14 @@
 :root { accent-color: var(--color-accent); }
 ::selection { color: var(--color-on-accent); background: var(--color-accent); }
 .app { display: flex; flex-direction: column; width: 100%; height: 100dvh; overflow: hidden; background: var(--color-background-body); }
-.app-header { flex: 0 0 auto; padding: calc(var(--safe-top) + var(--spacing-5)) calc(var(--safe-right) + var(--spacing-5)) var(--spacing-2) calc(var(--safe-left) + var(--spacing-5)); background: var(--color-background-body); }
+.app-header { flex: 0 0 auto; padding: calc(var(--status-bar-height) + var(--spacing-5)) calc(var(--safe-right) + var(--spacing-5)) var(--spacing-2) calc(var(--safe-left) + var(--spacing-5)); background: var(--color-background-body); }
 .app-content { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-inline: calc(var(--safe-left) + var(--spacing-5)) calc(var(--safe-right) + var(--spacing-5)); }
 .app-content.has-tabbar { padding-bottom: calc(var(--tabbar-height) + var(--safe-bottom) + var(--spacing-4)); }
 .app-content.immersive-content { padding-inline: 0; overflow: hidden; }
 .app-tabbar { position: fixed; z-index: 20; inset-inline: 0; bottom: 0; height: calc(var(--tabbar-height) + var(--safe-bottom)); padding: 0 calc(var(--safe-right) + var(--spacing-4)) var(--safe-bottom) calc(var(--safe-left) + var(--spacing-4)); background: var(--color-background-surface); border-top: 1px solid var(--color-border); }
 .app-tab-link { flex: 1; padding-block: var(--spacing-3); color: var(--color-text-secondary); font-size: var(--font-size-sm); text-align: center; text-decoration: none; }
 .app-tab-link[aria-current="page"] { color: var(--color-accent); font-weight: var(--font-weight-semibold); }
-.secondary-app-bar { flex: 0 0 auto; min-height: calc(var(--safe-top) + var(--spacing-12)); padding: var(--safe-top) calc(var(--safe-right) + var(--spacing-3)) 0 calc(var(--safe-left) + var(--spacing-3)); background: var(--color-background-body); }
+.secondary-app-bar { flex: 0 0 auto; min-height: calc(var(--status-bar-height) + var(--spacing-12)); padding: var(--status-bar-height) calc(var(--safe-right) + var(--spacing-3)) 0 calc(var(--safe-left) + var(--spacing-3)); background: var(--color-background-body); }
 .desktop-titlebar { flex: 0 0 auto; }
 .library-page, .book-page { width: min(100%, 64rem); margin-inline: auto; padding-block: var(--spacing-5); }
 .library-welcome h1 { letter-spacing: -0.03em; }

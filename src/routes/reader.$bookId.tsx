@@ -9,6 +9,7 @@ import { IconButton } from "@astryxdesign/core/IconButton";
 import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
 import { ChevronLeft, ChevronRight, List, Settings2, X } from "lucide-react";
+import { useThemeMode } from "../providers/theme-provider";
 import { getBookFile, useLibrary } from "../services/library";
 import { useReaderSettings } from "../services/reader-settings";
 
@@ -16,8 +17,22 @@ export const Route = createFileRoute("/reader/$bookId")({ component: ReaderPage 
 
 type TocItem = { label: string; href: string; subitems?: TocItem[] };
 type FoliateView = HTMLElement & { open: (file: File) => Promise<void>; init: (options: { lastLocation?: string; showTextStart: boolean }) => Promise<void>; goLeft: () => Promise<void>; goRight: () => Promise<void>; goTo: (href: string) => Promise<void>; book?: { toc?: TocItem[]; metadata?: { title?: unknown } }; renderer?: { setStyles?: (css: string) => void }; close: () => void };
-function readerCss(fontScale: number, lineHeight: number, paragraphSpacing: number, justify: boolean) {
-  return `html { font-size: ${fontScale}em; } p, li, blockquote { line-height: ${lineHeight}; margin-block: ${paragraphSpacing}em; text-align: ${justify ? "justify" : "start"}; } img, svg { max-width: 100%; height: auto; }`;
+function readerCss(fontScale: number, lineHeight: number, paragraphSpacing: number, justify: boolean, theme: "light" | "dark") {
+  const root = getComputedStyle(document.documentElement);
+  const background = root.getPropertyValue("--color-background-body").trim();
+  const foreground = root.getPropertyValue("--color-text-primary").trim();
+  const accent = root.getPropertyValue("--color-accent").trim();
+  return `html {
+    color-scheme: ${theme};
+    --theme-bg-color: ${background};
+    background-color: ${background};
+    color: ${foreground};
+    font-size: ${fontScale}em;
+  }
+  h1, h2, h3, h4, h5, h6 { color: ${foreground}; }
+  a { color: ${accent}; }
+  p, li, blockquote { line-height: ${lineHeight}; margin-block: ${paragraphSpacing}em; text-align: ${justify ? "justify" : "start"}; }
+  img, svg { max-width: 100%; height: auto; }`;
 }
 function flattenToc(items: TocItem[]): TocItem[] { return items.flatMap((item) => [item, ...flattenToc(item.subitems ?? [])]); }
 
@@ -28,8 +43,11 @@ function ReaderPage() {
   const isReady = useLibrary((state) => state.isReady);
   const updateProgress = useLibrary((state) => state.updateProgress);
   const settings = useReaderSettings();
+  const { theme } = useThemeMode();
   const hostRef = useRef<HTMLElement>(null);
   const viewRef = useRef<FoliateView | null>(null);
+  const themeRef = useRef(theme);
+  themeRef.current = theme;
   const [toc, setToc] = useState<TocItem[]>([]);
   const [progress, setProgress] = useState(book?.progress ?? 0);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
@@ -38,12 +56,12 @@ function ReaderPage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   useEffect(() => {
-    if (!book) { if (isReady) void navigate({ to: "/" }); return; }
-    const selectedBook = book;
+    const selectedBook = useLibrary.getState().books.find((item) => item.id === bookId);
+    if (!selectedBook) { if (isReady) void navigate({ to: "/" }); return; }
     if (selectedBook.format === "TXT") { setStatus("ready"); return; }
     let cancelled = false;
     let saveTimer: number | undefined;
-    async function open() {
+    const open = async () => {
       try {
         const stored = await getBookFile(selectedBook.id);
         if (!stored || cancelled) throw new Error("找不到本地书籍文件，请重新导入。");
@@ -58,14 +76,19 @@ function ReaderPage() {
         hostRef.current?.append(view);
         viewRef.current = view;
         await view.open(file);
-        view.renderer?.setStyles?.(readerCss(settings.fontScale, settings.lineHeight, settings.paragraphSpacing, settings.justify));
+        view.renderer?.setStyles?.(readerCss(settings.fontScale, settings.lineHeight, settings.paragraphSpacing, settings.justify, themeRef.current));
         await view.init({ lastLocation: selectedBook.cfi, showTextStart: true });
         if (!cancelled) { setToc(view.book?.toc ?? []); setStatus("ready"); }
       } catch (reason) { if (!cancelled) { setError(reason instanceof Error ? reason.message : "无法打开这本 EPUB。"); setStatus("error"); } }
-    }
+    };
     void open();
     return () => { cancelled = true; window.clearTimeout(saveTimer); viewRef.current?.close(); viewRef.current?.remove(); viewRef.current = null; };
-  }, [book, isReady, navigate, settings.fontScale, settings.justify, settings.lineHeight, settings.paragraphSpacing, updateProgress]);
+  }, [bookId, book?.format, isReady, navigate, settings.fontScale, settings.justify, settings.lineHeight, settings.paragraphSpacing, updateProgress]);
+
+  // Recolor the already-open EPUB when the theme changes; no need to re-open it.
+  useEffect(() => {
+    viewRef.current?.renderer?.setStyles?.(readerCss(settings.fontScale, settings.lineHeight, settings.paragraphSpacing, settings.justify, theme));
+  }, [theme, settings.fontScale, settings.lineHeight, settings.paragraphSpacing, settings.justify]);
 
   if (!book) return <VStack className="reader-page" align="center" justify="center" gap={2}><Heading level={4}>正在打开书籍</Heading></VStack>;
   const textReader = book.format === "TXT";

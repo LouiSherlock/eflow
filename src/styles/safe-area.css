@@ -17,6 +17,13 @@
   --native-safe-area-left: 0px;
   --native-safe-area-right: 0px;
 
+  /*
+   * Published by `useSystemInsets()` from Android WindowInsets (dp). The
+   * `env()` values are only the first-paint fallback before the hook runs.
+   */
+  --status-bar-height: env(safe-area-inset-top, 0px);
+  --navigation-bar-height: env(safe-area-inset-bottom, 0px);
+
   --safe-top: max(env(safe-area-inset-top, 0px), var(--native-safe-area-top));
   --safe-bottom: max(
     env(safe-area-inset-bottom, 0px),
@@ -95,7 +102,7 @@ body {
 
 .app-header {
   flex-shrink: 0;
-  padding-block: calc(var(--safe-top) + var(--spacing-4)) var(--spacing-2);
+  padding-block: calc(var(--status-bar-height) + var(--spacing-4)) var(--spacing-2);
   padding-inline: calc(var(--safe-left) + var(--spacing-4))
     calc(var(--safe-right) + var(--spacing-4));
 }
@@ -178,8 +185,8 @@ body {
 
 .secondary-app-bar {
   flex-shrink: 0;
-  height: calc(64px + var(--safe-top));
-  padding-block-start: var(--safe-top);
+  height: calc(64px + var(--status-bar-height));
+  padding-block-start: var(--status-bar-height);
   padding-inline: calc(var(--safe-left) + var(--spacing-2))
     calc(var(--safe-right) + var(--spacing-4));
   background: var(--color-background-body, light-dark(#ffffff, #121212));
@@ -199,12 +206,18 @@ body {
   overscroll-behavior: contain;
   padding-inline: calc(var(--safe-left) + var(--spacing-4))
     calc(var(--safe-right) + var(--spacing-4));
+  padding-bottom: var(--navigation-bar-height);
 }
 
 .app-content.has-tabbar {
   padding-bottom: calc(
-    var(--tabbar-height) + var(--safe-bottom) + var(--spacing-6)
+    var(--tabbar-height) + var(--navigation-bar-height) + var(--spacing-6)
   );
+}
+
+/* Primary pages have no app bar, so the scroll area clears the status bar. */
+.app-content.primary-content {
+  padding-block-start: var(--status-bar-height);
 }
 
 /* Immersive pages (reader) go edge-to-edge, keeping only the hardware insets. */
@@ -222,7 +235,7 @@ body {
   z-index: 100;
   inset-inline: calc(var(--safe-left) + var(--spacing-4))
     calc(var(--safe-right) + var(--spacing-4));
-  bottom: calc(var(--safe-bottom) + var(--spacing-3));
+  bottom: calc(var(--navigation-bar-height) + var(--spacing-3));
   max-width: 30rem;
   margin-inline: auto;
 

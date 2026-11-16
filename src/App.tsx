@@ -87,17 +87,7 @@ function App() {
   return (
     <VStack className="app" gap={0}>
       {isDesktopRuntime ? <DesktopTitleBar /> : null}
-      {!isDesktopRuntime && isPrimaryRoute ? (
-        <HStack
-          as="header"
-          className="app-header"
-          align="center"
-          justify="between"
-          gap={3}
-        >
-          <Heading level={3}>纸间</Heading>
-        </HStack>
-      ) : null}
+   
       {!isPrimaryRoute ? (
         <HStack
           as="header"
@@ -120,9 +110,8 @@ function App() {
 
       <VStack
         as="main"
-        className={`app-content${isPrimaryRoute ? " has-tabbar" : ""}${isImmersiveRoute ? " immersive-content" : ""}`}
+        className={`app-content${isPrimaryRoute ? " has-tabbar primary-content" : ""}${isImmersiveRoute ? " immersive-content" : ""}`}
         gap={4}
-        paddingBlockStart={isPrimaryRoute ? 4 : 0}
       >
         <Outlet />
       </VStack>

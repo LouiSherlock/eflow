@@ -1,4 +1,5 @@
 import { Outlet, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { HStack } from "@astryxdesign/core/HStack";
 import { Heading } from "@astryxdesign/core/Heading";
 import { Icon } from "@astryxdesign/core/Icon";
@@ -10,23 +11,30 @@ import { ArrowLeft } from "lucide-react";
 import { DesktopTitleBar } from "./components/desktop-titlebar";
 import { ThemeSwitcher } from "./components/theme-switcher";
 import { useSystemInsets } from "./hooks/use-system-insets";
+import { useLibrary } from "./services/library";
 
 const PRIMARY_ROUTES = new Set(["/", "/discover", "/profile"]);
 const ROUTE_LABELS: Record<string, string> = {
-  "/": "Home",
-  "/discover": "Discover",
-  "/profile": "Profile",
-  "/settings": "Settings",
-  "/about": "About",
-  "/help": "Help",
+  "/": "书架",
+  "/discover": "发现",
+  "/profile": "我的",
+  "/settings": "阅读设置",
+  "/about": "关于",
+  "/help": "帮助",
+  "/reader/$bookId": "正在阅读",
 };
 
 function App() {
   useSystemInsets();
+  const hydrateLibrary = useLibrary((state) => state.hydrate);
+  useEffect(() => { void hydrateLibrary(); }, [hydrateLibrary]);
   const routeId = useRouterState({
     select: (state) => state.matches[state.matches.length - 1]?.routeId ?? "/",
   });
   const isPrimaryRoute = PRIMARY_ROUTES.has(routeId);
+  const isReaderRoute = routeId === "/reader/$bookId";
+  const isBookRoute = routeId === "/book/$bookId";
+  const isImmersiveRoute = isReaderRoute || isBookRoute;
   const isDesktopRuntime =
     isTauri() &&
     typeof navigator !== "undefined" &&
@@ -40,7 +48,7 @@ function App() {
       return;
     }
 
-    void navigate({ to: "/profile" });
+    void navigate({ to: "/" });
   }
 
   return (
@@ -54,11 +62,11 @@ function App() {
           justify="between"
           gap={3}
         >
-          <Heading level={3}>Tauri</Heading>
+          <Heading level={3}>纸间</Heading>
           <ThemeSwitcher />
         </HStack>
       ) : null}
-      {!isPrimaryRoute ? (
+      {!isPrimaryRoute && !isImmersiveRoute ? (
         <HStack
           as="header"
           className="secondary-app-bar"
@@ -78,7 +86,7 @@ function App() {
 
       <VStack
         as="main"
-        className={`app-content${isPrimaryRoute ? " has-tabbar" : ""}`}
+        className={`app-content${isPrimaryRoute ? " has-tabbar" : ""}${isImmersiveRoute ? " immersive-content" : ""}`}
         gap={4}
         paddingBlockStart={isPrimaryRoute ? 4 : 0}
       >
@@ -95,13 +103,13 @@ function App() {
           aria-label="Main navigation"
         >
           <Link href="/" isStandalone className="app-tab-link">
-            Home
+            书架
           </Link>
           <Link href="/discover" isStandalone className="app-tab-link">
-            Discover
+            发现
           </Link>
           <Link href="/profile" isStandalone className="app-tab-link">
-            Profile
+            我的
           </Link>
         </HStack>
       ) : null}

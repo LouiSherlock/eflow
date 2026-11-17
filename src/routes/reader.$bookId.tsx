@@ -22,6 +22,18 @@ function readerCss(fontScale: number, lineHeight: number, paragraphSpacing: numb
   const background = root.getPropertyValue("--color-background-body").trim();
   const foreground = root.getPropertyValue("--color-text-primary").trim();
   const accent = root.getPropertyValue("--color-accent").trim();
+  /*
+   * Calibre and other toolships hard-code near-black text (a `.calibre5`
+   * class, an inline `color`, or a `body { background: #fff }`), so inheriting
+   * `color` from `html` is not enough. In dark mode the content is repainted
+   * over the top; `!important` also beats the book's inline styles. Links keep
+   * the accent colour.
+   */
+  const darkOverride = theme === "dark" ? `
+  html, body { background-color: ${background} !important; color: ${foreground} !important; }
+  body * { color: ${foreground} !important; background-color: transparent !important; }
+  a, a * { color: ${accent} !important; }
+` : "";
   return `html {
     color-scheme: ${theme};
     --theme-bg-color: ${background};
@@ -32,7 +44,7 @@ function readerCss(fontScale: number, lineHeight: number, paragraphSpacing: numb
   h1, h2, h3, h4, h5, h6 { color: ${foreground}; }
   a { color: ${accent}; }
   p, li, blockquote { line-height: ${lineHeight}; margin-block: ${paragraphSpacing}em; text-align: ${justify ? "justify" : "start"}; }
-  img, svg { max-width: 100%; height: auto; }`;
+  img, svg { max-width: 100%; height: auto; }${darkOverride}`;
 }
 function flattenToc(items: TocItem[]): TocItem[] { return items.flatMap((item) => [item, ...flattenToc(item.subitems ?? [])]); }
 

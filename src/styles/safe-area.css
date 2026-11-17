@@ -215,9 +215,23 @@ body {
   );
 }
 
-/* Primary pages have no app bar, so the scroll area clears the status bar. */
+/*
+ * Every route body shares one centered measure, so pages that stretch on a wide
+ * window (settings, about, help) line up with the library and book pages.
+ * The immersive reader opts out below.
+ */
+.app-content:not(.immersive-content) > * {
+  width: min(100%, 64rem);
+  margin-inline: auto;
+}
+
+/*
+ * Primary pages have no app bar, so the scroll area clears the status bar and
+ * gives the first heading a little more breathing room. Pages that render the
+ * secondary app bar already have that separation.
+ */
 .app-content.primary-content {
-  padding-block-start: var(--status-bar-height);
+  padding-block-start: calc(var(--status-bar-height) + var(--spacing-4));
 }
 
 /* Immersive pages (reader) go edge-to-edge, keeping only the hardware insets. */

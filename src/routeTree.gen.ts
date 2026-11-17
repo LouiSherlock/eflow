@@ -11,9 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
-import { Route as DiscoverRouteImport } from './routes/discover'
+import { Route as FavoritesRouteImport } from './routes/favorites'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as BookBookIdRouteImport } from './routes/book.$bookId'
 import { Route as ReaderBookIdRouteImport } from './routes/reader.$bookId'
@@ -28,9 +29,9 @@ const AboutRoute = AboutRouteImport.update({
   path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DiscoverRoute = DiscoverRouteImport.update({
-  id: '/discover',
-  path: '/discover',
+const FavoritesRoute = FavoritesRouteImport.update({
+  id: '/favorites',
+  path: '/favorites',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HelpRoute = HelpRouteImport.update({
@@ -41,6 +42,11 @@ const HelpRoute = HelpRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -62,9 +68,10 @@ const ReaderBookIdRoute = ReaderBookIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/discover': typeof DiscoverRoute
+  '/favorites': typeof FavoritesRoute
   '/help': typeof HelpRoute
   '/profile': typeof ProfileRoute
+  '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/book/$bookId': typeof BookBookIdRoute
   '/reader/$bookId': typeof ReaderBookIdRoute
@@ -72,9 +79,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/discover': typeof DiscoverRoute
+  '/favorites': typeof FavoritesRoute
   '/help': typeof HelpRoute
   '/profile': typeof ProfileRoute
+  '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/book/$bookId': typeof BookBookIdRoute
   '/reader/$bookId': typeof ReaderBookIdRoute
@@ -83,9 +91,10 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/discover': typeof DiscoverRoute
+  '/favorites': typeof FavoritesRoute
   '/help': typeof HelpRoute
   '/profile': typeof ProfileRoute
+  '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/book/$bookId': typeof BookBookIdRoute
   '/reader/$bookId': typeof ReaderBookIdRoute
@@ -95,9 +104,10 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
-    | '/discover'
+    | '/favorites'
     | '/help'
     | '/profile'
+    | '/search'
     | '/settings'
     | '/book/$bookId'
     | '/reader/$bookId'
@@ -105,9 +115,10 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
-    | '/discover'
+    | '/favorites'
     | '/help'
     | '/profile'
+    | '/search'
     | '/settings'
     | '/book/$bookId'
     | '/reader/$bookId'
@@ -115,9 +126,10 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
-    | '/discover'
+    | '/favorites'
     | '/help'
     | '/profile'
+    | '/search'
     | '/settings'
     | '/book/$bookId'
     | '/reader/$bookId'
@@ -126,9 +138,10 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
-  DiscoverRoute: typeof DiscoverRoute
+  FavoritesRoute: typeof FavoritesRoute
   HelpRoute: typeof HelpRoute
   ProfileRoute: typeof ProfileRoute
+  SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
   BookBookIdRoute: typeof BookBookIdRoute
   ReaderBookIdRoute: typeof ReaderBookIdRoute
@@ -150,11 +163,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/discover': {
-      id: '/discover'
-      path: '/discover'
-      fullPath: '/discover'
-      preLoaderRoute: typeof DiscoverRouteImport
+    '/favorites': {
+      id: '/favorites'
+      path: '/favorites'
+      fullPath: '/favorites'
+      preLoaderRoute: typeof FavoritesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/help': {
@@ -169,6 +182,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -198,9 +218,10 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
-  DiscoverRoute: DiscoverRoute,
+  FavoritesRoute: FavoritesRoute,
   HelpRoute: HelpRoute,
   ProfileRoute: ProfileRoute,
+  SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
   BookBookIdRoute: BookBookIdRoute,
   ReaderBookIdRoute: ReaderBookIdRoute,

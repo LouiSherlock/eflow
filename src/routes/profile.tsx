@@ -14,9 +14,9 @@ function ProfilePage() {
   return <VStack className="library-page" gap={4}>
     <VStack gap={1}><Heading level={2}>我的</Heading><Text type="body" color="secondary">管理阅读偏好与本地书架。</Text></VStack>
     <List density="spacious" hasDividers>
-      <ListItem label="本地书架" description={`已收藏 ${count} 本书`} startContent={<Icon icon={BookMarked} />} />
+      <ListItem label="本地书架" description={`已导入 ${count} 本书`} startContent={<Icon icon={BookMarked} />} />
       <ListItem label="阅读设置" description="主题、字号和排版" href="/settings" startContent={<Icon icon={Settings} />} />
-      <ListItem label="导入帮助" description="支持的文件与常见问题" href="/help" startContent={<Icon icon={CircleHelp} />} />
+      <ListItem label="常见问题" description="支持的文件与常见问题" href="/help" startContent={<Icon icon={CircleHelp} />} />
       <ListItem label="关于纸间" description="本机离线阅读器" href="/about" startContent={<Icon icon={UserRound} />} />
     </List>
   </VStack>;

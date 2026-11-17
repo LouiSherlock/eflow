@@ -2,9 +2,9 @@ import { makeBook } from "foliate-js/view.js";
 import { create } from "zustand";
 
 export type BookFormat = "EPUB" | "TXT";
-export type Book = { id: string; title: string; author: string; format: BookFormat; size: number; progress: number; cfi?: string; addedAt: number; updatedAt: number; cover?: Blob };
+export type Book = { id: string; title: string; author: string; format: BookFormat; size: number; progress: number; cfi?: string; isFavorite?: boolean; addedAt: number; updatedAt: number; cover?: Blob };
 type StoredFile = { id: string; file: Blob; cover?: Blob };
-type LibraryState = { books: Book[]; isReady: boolean; hydrate: () => Promise<void>; importBook: (file: File) => Promise<Book>; updateProgress: (id: string, progress: number, cfi?: string) => void; removeBook: (id: string) => Promise<void> };
+type LibraryState = { books: Book[]; isReady: boolean; hydrate: () => Promise<void>; importBook: (file: File) => Promise<Book>; updateProgress: (id: string, progress: number, cfi?: string) => void; toggleFavorite: (id: string) => void; removeBook: (id: string) => Promise<void> };
 const DB_NAME = "eflow-reader";
 const STORE_NAME = "book-files";
 const LIBRARY_KEY = "eflow-library-v2";
@@ -68,6 +68,11 @@ export const useLibrary = create<LibraryState>((set, get) => ({
   },
   updateProgress: (id, progress, cfi) => {
     const books = get().books.map((book) => book.id === id ? { ...book, progress, cfi: cfi ?? book.cfi, updatedAt: Date.now() } : book);
+    saveMetadata(books);
+    set({ books });
+  },
+  toggleFavorite: (id) => {
+    const books = get().books.map((book) => book.id === id ? { ...book, isFavorite: !book.isFavorite } : book);
     saveMetadata(books);
     set({ books });
   },

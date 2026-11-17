@@ -7,16 +7,16 @@ import { IconButton } from "@astryxdesign/core/IconButton";
 import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
 import { isTauri } from "@tauri-apps/api/core";
-import { ArrowLeft, BookOpen, Compass, UserRound, type LucideIcon } from "lucide-react";
+import { ArrowLeft, Bookmark, BookOpen, UserRound, type LucideIcon } from "lucide-react";
 import { motion } from "motion/react";
 import { DesktopTitleBar } from "./components/desktop-titlebar";
 import { useSystemInsets } from "./hooks/use-system-insets";
 import { useLibrary } from "./services/library";
 
-const PRIMARY_ROUTES = new Set(["/", "/discover", "/profile"]);
-const TAB_ITEMS: ReadonlyArray<{ to: "/" | "/discover" | "/profile"; label: string; icon: LucideIcon }> = [
+const PRIMARY_ROUTES = new Set(["/", "/favorites", "/profile"]);
+const TAB_ITEMS: ReadonlyArray<{ to: "/" | "/favorites" | "/profile"; label: string; icon: LucideIcon }> = [
   { to: "/", label: "书架", icon: BookOpen },
-  { to: "/discover", label: "发现", icon: Compass },
+  { to: "/favorites", label: "收藏", icon: Bookmark },
   { to: "/profile", label: "我的", icon: UserRound },
 ];
 
@@ -42,8 +42,9 @@ function TabItem({ item }: { item: (typeof TAB_ITEMS)[number] }) {
 }
 const ROUTE_LABELS: Record<string, string> = {
   "/": "书架",
-  "/discover": "发现",
+  "/favorites": "收藏",
   "/profile": "我的",
+  "/search": "搜索",
   "/settings": "阅读设置",
   "/about": "关于",
   "/help": "帮助",

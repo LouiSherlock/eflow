@@ -14,7 +14,6 @@
 .library-welcome h1 { letter-spacing: -0.03em; }
 .library-greeting { color: var(--color-accent); font-weight: var(--font-weight-semibold); }
 .book-file-input { display: none; }
-.library-search { width: 100%; }
 .continue-reading { display: block; color: inherit; text-decoration: none; }
 .continue-card { background: var(--color-background-surface); box-shadow: var(--shadow-low); }
 .book-cover { position: relative; width: 100%; aspect-ratio: 3 / 4; overflow: hidden; border-radius: var(--radius-control); background: var(--color-accent-muted); color: var(--color-accent); }

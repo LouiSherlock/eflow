@@ -4,6 +4,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { Theme } from "@astryxdesign/core/theme";
 import { LinkProvider } from "@astryxdesign/core/Link";
+import { ToastViewport } from "@astryxdesign/core/Toast";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "@tanstack/react-router";
 import { themes, defaultThemeSlug } from "./astryx-themes";
@@ -22,7 +23,9 @@ function AppRoot() {
   return (
     <Theme theme={themes[defaultThemeSlug]} mode={mode}>
       <LinkProvider component={TanStackLinkAdapter}>
-        <RouterProvider router={router} />
+        <ToastViewport position="topEnd">
+          <RouterProvider router={router} />
+        </ToastViewport>
       </LinkProvider>
     </Theme>
   );

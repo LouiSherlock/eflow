@@ -234,9 +234,189 @@ body {
   padding-block-start: calc(var(--status-bar-height) + var(--spacing-4));
 }
 
-/* Immersive pages (reader) go edge-to-edge, keeping only the hardware insets. */
+/* Immersive pages (reader) keep the hardware insets and status bar clear. */
 .app-content.immersive-content {
   padding-inline: var(--safe-left) var(--safe-right);
+  padding-block-start: var(--status-bar-height);
+}
+
+/*
+ * Reader chrome. Hidden by default so the book fills the screen; tapping the
+ * middle of the page reveals it as an overlay, without reflowing the text.
+ * Motion animates the layer wrappers, so positioning lives on them.
+ */
+.reader-chrome {
+  background: var(--color-background-surface);
+  color: var(--color-text-primary);
+}
+
+.reader-chrome-layer {
+  position: absolute;
+  z-index: 5;
+  inset-inline: 0;
+}
+
+.reader-chrome-layer-top {
+  top: 0;
+}
+
+.reader-chrome-layer-bottom {
+  bottom: 0;
+}
+
+/*
+ * The reader reuses the app's secondary bar, but the reading page already sits
+ * below the status bar, so the bar must not add that inset again.
+ */
+.reader-chrome-top.secondary-app-bar {
+  height: calc(var(--spacing-12) + var(--spacing-4));
+  padding-block-start: 0;
+  padding-inline: var(--spacing-2) var(--spacing-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.secondary-app-title {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.reader-chrome-bottom {
+  bottom: 0;
+  min-height: var(--spacing-12);
+  padding-inline: var(--spacing-2) var(--spacing-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.reader-slider {
+  flex: 1 1 auto;
+  min-width: 0;
+  accent-color: var(--color-accent);
+}
+
+/* Custom table of contents: a left drawer with indented, highlighted entries. */
+.reader-toc-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+}
+
+.reader-toc-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: color-mix(in srgb, #000 32%, transparent);
+}
+
+.reader-toc {
+  position: absolute;
+  z-index: 1;
+  inset-block: 0;
+  inset-inline-start: 0;
+  display: flex;
+  flex-direction: column;
+  width: min(20rem, 86%);
+  background: var(--color-background-surface);
+  border-inline-end: 1px solid var(--color-border);
+  box-shadow: var(--shadow-high);
+}
+
+.reader-toc-header {
+  flex: 0 0 auto;
+  padding: var(--spacing-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.reader-toc-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-block: var(--spacing-2);
+}
+
+.reader-toc-item {
+  display: block;
+  width: 100%;
+  padding-block: var(--spacing-2);
+  padding-inline-end: var(--spacing-4);
+  border: 0;
+  background: transparent;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  text-align: start;
+  cursor: pointer;
+}
+
+.reader-toc-item:active {
+  background: var(--color-accent-muted);
+}
+
+.reader-toc-item[data-active="true"] {
+  color: var(--color-accent);
+  font-weight: var(--font-weight-semibold);
+}
+
+.reader-toc-empty {
+  padding: var(--spacing-4);
+}
+
+/* Custom font-size popover: step buttons, a live slider and the align toggle. */
+.reader-font-panel {
+  position: absolute;
+  z-index: 7;
+  top: calc(var(--spacing-12) + var(--spacing-4) + var(--spacing-2));
+  inset-inline-end: var(--spacing-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  width: min(18rem, calc(100% - var(--spacing-6)));
+  padding: var(--spacing-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-background-surface);
+  box-shadow: var(--shadow-high);
+}
+
+.reader-font-row {
+  gap: var(--spacing-2);
+}
+
+.reader-font-step {
+  flex: 0 0 auto;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.reader-font-step:active {
+  background: var(--color-accent-muted);
+}
+
+.reader-font-slider {
+  flex: 1 1 auto;
+  min-width: 0;
+  accent-color: var(--color-accent);
+}
+
+.reader-font-toggle {
+  padding: var(--spacing-1) var(--spacing-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+}
+
+.reader-font-toggle[data-on="true"] {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 /*

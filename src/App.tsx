@@ -1,15 +1,14 @@
 import { Link, Outlet, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { HStack } from "@astryxdesign/core/HStack";
-import { Heading } from "@astryxdesign/core/Heading";
 import { Icon } from "@astryxdesign/core/Icon";
-import { IconButton } from "@astryxdesign/core/IconButton";
 import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
 import { isTauri } from "@tauri-apps/api/core";
-import { ArrowLeft, Bookmark, BookOpen, UserRound, type LucideIcon } from "lucide-react";
+import { Bookmark, BookOpen, UserRound, type LucideIcon } from "lucide-react";
 import { motion } from "motion/react";
 import { DesktopTitleBar } from "./components/desktop-titlebar";
+import { SecondaryAppBar } from "./components/secondary-app-bar";
 import { useSystemInsets } from "./hooks/use-system-insets";
 import { useLibrary } from "./services/library";
 
@@ -59,16 +58,8 @@ function App() {
   const routeId = useRouterState({
     select: (state) => state.matches[state.matches.length - 1]?.routeId ?? "/",
   });
-  const routeParams = useRouterState({
-    select: (state) => state.matches[state.matches.length - 1]?.params,
-  });
   const isPrimaryRoute = PRIMARY_ROUTES.has(routeId);
-  const isReaderRoute = routeId === "/reader/$bookId";
-  const isImmersiveRoute = isReaderRoute;
-  const activeBookTitle = useLibrary((state) => {
-    const bookId = (routeParams as { bookId?: string } | undefined)?.bookId;
-    return bookId ? state.books.find((book) => book.id === bookId)?.title : undefined;
-  });
+  const isImmersiveRoute = routeId === "/reader/$bookId";
   const isDesktopRuntime =
     isTauri() &&
     typeof navigator !== "undefined" &&
@@ -89,24 +80,8 @@ function App() {
     <VStack className="app" gap={0}>
       {isDesktopRuntime ? <DesktopTitleBar /> : null}
    
-      {!isPrimaryRoute ? (
-        <HStack
-          as="header"
-          className="secondary-app-bar"
-          align="center"
-          gap={3}
-        >
-          <IconButton
-            className="secondary-back-button"
-            label="Back"
-            icon={<Icon icon={ArrowLeft} />}
-            variant="ghost"
-            onClick={goBack}
-          />
-          <Heading level={4} className="secondary-app-title">
-            {isReaderRoute && activeBookTitle ? activeBookTitle : (ROUTE_LABELS[routeId] ?? "页面")}
-          </Heading>
-        </HStack>
+      {!isPrimaryRoute && !isImmersiveRoute ? (
+        <SecondaryAppBar title={ROUTE_LABELS[routeId] ?? "页面"} onBack={goBack} />
       ) : null}
 
       <VStack

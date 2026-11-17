@@ -8,7 +8,7 @@ import { Text } from "@astryxdesign/core/Text";
 import { TextInput } from "@astryxdesign/core/TextInput";
 import { VStack } from "@astryxdesign/core/VStack";
 import { Search } from "lucide-react";
-import { BookCard } from "../components/book-card";
+import { BookGrid } from "../components/book-grid";
 import { RemoveBookDialog } from "../components/remove-book-dialog";
 import { type Book, useLibrary } from "../services/library";
 
@@ -32,7 +32,7 @@ function SearchPage() {
         <Heading level={3}>搜索结果</Heading>
         <Text type="supporting" color="secondary">{results.length} 本</Text>
       </HStack>
-      {results.length ? <section className="book-grid" aria-label="搜索结果">{results.map((book) => <BookCard key={book.id} book={book} onToggleFavorite={() => toggleFavorite(book.id)} onRequestRemove={setPendingRemoval} />)}</section> : <Card className="empty-library" padding={5}><VStack align="center" gap={3}><Icon className="empty-icon" icon={Search} /><Heading level={3}>没有找到这本书</Heading><Text type="body" color="secondary">换个书名或作者再试试。</Text></VStack></Card>}
+      {results.length ? <BookGrid books={results} label="搜索结果" onToggleFavorite={(book) => toggleFavorite(book.id)} onRequestRemove={setPendingRemoval} /> : <Card className="empty-library" padding={5}><VStack align="center" gap={3}><Icon className="empty-icon" icon={Search} /><Heading level={3}>没有找到这本书</Heading><Text type="body" color="secondary">换个书名或作者再试试。</Text></VStack></Card>}
     </> : <Card className="empty-library" padding={5}><VStack align="center" gap={3}><Icon className="empty-icon" icon={Search} /><Heading level={3}>搜索书架</Heading><Text type="body" color="secondary">输入书名或作者，查找已导入的书。</Text></VStack></Card>}
     <RemoveBookDialog
       book={pendingRemoval}

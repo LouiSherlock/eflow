@@ -44,8 +44,7 @@ async fn set_theme<R: Runtime>(app: AppHandle<R>, theme: String) -> Result<(), S
 
 /// Safe-area insets in dp (CSS pixels) and physical pixels.
 #[tauri::command]
-async fn get_insets<R: Runtime>(app: AppHandle<R>) -> Result<serde_json::Value, String> {
-    #[cfg(target_os = "android")]
+async fn get_insets<R: Runtime>(app: AppHandle<R>) -> Result<serde_json::Value, String> {    #[cfg(target_os = "android")]
     {
         app.state::<SystemBars<R>>()
             .handle
@@ -70,9 +69,28 @@ async fn get_insets<R: Runtime>(app: AppHandle<R>) -> Result<serde_json::Value, 
     }
 }
 
+/// Keeps the screen awake while the reader is open (Android window flag).
+#[tauri::command]
+async fn set_keep_screen_on<R: Runtime>(app: AppHandle<R>, enabled: bool) -> Result<(), String> {
+    #[cfg(target_os = "android")]
+    {
+        app.state::<SystemBars<R>>()
+            .handle
+            .run_mobile_plugin_async::<()>("set_keep_screen_on", json!({ "enabled": enabled }))
+            .await
+            .map_err(|error| error.to_string())
+    }
+
+    #[cfg(not(target_os = "android"))]
+    {
+        let _ = (&app, enabled);
+        Ok(())
+    }
+}
+
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("system-bars")
-        .invoke_handler(tauri::generate_handler![set_theme, get_insets])
+        .invoke_handler(tauri::generate_handler![set_theme, get_insets, set_keep_screen_on])
         .setup(|app, api| {
             #[cfg(target_os = "android")]
             {

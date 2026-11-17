@@ -1,11 +1,12 @@
 ## Default Permission
 
-Default permissions for the system-bars plugin: apply the system bar theme and read the safe-area insets.
+Default permissions for the system-bars plugin: apply the system bar theme, read the safe-area insets, and keep the screen awake.
 
 #### This default permission set includes the following:
 
 - `allow-set-theme`
 - `allow-get-insets`
+- `allow-set-keep-screen-on`
 
 ## Permission Table
 
@@ -38,6 +39,32 @@ Enables the get_insets command without any pre-configured scope.
 <td>
 
 Denies the get_insets command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`system-bars:allow-set-keep-screen-on`
+
+</td>
+<td>
+
+Enables the set_keep_screen_on command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`system-bars:deny-set-keep-screen-on`
+
+</td>
+<td>
+
+Denies the set_keep_screen_on command without any pre-configured scope.
 
 </td>
 </tr>

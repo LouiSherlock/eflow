@@ -109,12 +109,11 @@ body {
 
 .desktop-titlebar {
   flex-shrink: 0;
-  height: 48px;
+  height: 40px;
   padding-inline-start: var(--spacing-3);
   padding-inline-end: 0;
   color: var(--color-text-primary);
   background: var(--color-background-surface);
-  border-bottom: 1px solid var(--color-border);
   user-select: none;
 }
 
@@ -238,6 +237,7 @@ body {
 .app-content.immersive-content {
   padding-inline: var(--safe-left) var(--safe-right);
   padding-block-start: var(--status-bar-height);
+  overflow: hidden;
 }
 
 /*
@@ -257,7 +257,10 @@ body {
 }
 
 .reader-chrome-layer-top {
-  top: 0;
+  top: calc(-1 * var(--status-bar-height));
+  padding-block-start: var(--status-bar-height);
+  background: var(--color-background-surface);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .reader-chrome-layer-bottom {
@@ -270,9 +273,11 @@ body {
  */
 .reader-chrome-top.secondary-app-bar {
   height: calc(var(--spacing-12) + var(--spacing-4));
+  min-height: calc(var(--spacing-12) + var(--spacing-4));
   padding-block-start: 0;
   padding-inline: var(--spacing-2) var(--spacing-3);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 0;
+  background: transparent;
 }
 
 .secondary-app-title {
@@ -291,6 +296,30 @@ body {
   flex: 1 1 auto;
   min-width: 0;
   accent-color: var(--color-accent);
+}
+
+/* Invisible edge buttons: paging works with plain taps on every platform. */
+.reader-tap-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 4;
+  width: 25%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.reader-tap-zone-left {
+  left: 0;
+}
+
+.reader-tap-zone-right {
+  right: 0;
 }
 
 /* Custom table of contents: a left drawer with indented, highlighted entries. */
@@ -316,14 +345,12 @@ body {
   flex-direction: column;
   width: min(20rem, 86%);
   background: var(--color-background-surface);
-  border-inline-end: 1px solid var(--color-border);
   box-shadow: var(--shadow-high);
 }
 
 .reader-toc-header {
   flex: 0 0 auto;
   padding: var(--spacing-4);
-  border-bottom: 1px solid var(--color-border);
 }
 
 .reader-toc-list {

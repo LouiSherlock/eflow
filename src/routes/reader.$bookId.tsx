@@ -12,6 +12,7 @@ import { VStack } from "@astryxdesign/core/VStack";
 import { ChevronRight, CircleAlert, List, X } from "lucide-react";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { SecondaryAppBar } from "../components/secondary-app-bar";
+import { useKeepScreenOn } from "../hooks/use-keep-screen-on";
 import { useThemeMode } from "../providers/theme-provider";
 import { getBookFile, useLibrary } from "../services/library";
 import { useReaderSettings } from "../services/reader-settings";
@@ -126,6 +127,9 @@ function ReaderPage() {
   const [expandedToc, setExpandedToc] = useState<ReadonlySet<string>>(() => new Set());
   const [isFontOpen, setIsFontOpen] = useState(false);
   const [fontPreview, setFontPreview] = useState(settings.fontScale);
+  const [chromeActivity, setChromeActivity] = useState(0);
+
+  useKeepScreenOn(Boolean(book));
 
   function goBack() {
     if (router.history.canGoBack()) {
@@ -169,6 +173,26 @@ function ReaderPage() {
   // Keep the custom size slider in step with the stored setting.
   useEffect(() => { setFontPreview(settings.fontScale); }, [settings.fontScale]);
 
+  // Hide the chrome again after five seconds without any interaction.
+  useEffect(() => {
+    if (!isChromeVisible || isTocOpen || isFontOpen) return;
+    const timeout = window.setTimeout(() => setIsChromeVisible(false), 5000);
+    return () => window.clearTimeout(timeout);
+  }, [isChromeVisible, isTocOpen, isFontOpen, chromeActivity]);
+
+  useEffect(() => {
+    if (!isChromeVisible) return;
+    const bump = () => setChromeActivity((count) => count + 1);
+    window.addEventListener("pointerdown", bump, true);
+    window.addEventListener("pointerup", bump, true);
+    window.addEventListener("keydown", bump, true);
+    return () => {
+      window.removeEventListener("pointerdown", bump, true);
+      window.removeEventListener("pointerup", bump, true);
+      window.removeEventListener("keydown", bump, true);
+    };
+  }, [isChromeVisible]);
+
   useEffect(() => {
     const selectedBook = useLibrary.getState().books.find((item) => item.id === bookId);
     if (!selectedBook) { if (isReady) void navigate({ to: "/" }); return; }
@@ -188,29 +212,42 @@ function ReaderPage() {
           window.clearTimeout(saveTimer);
           saveTimer = window.setTimeout(() => updateProgress(selectedBook.id, nextProgress, event.detail.cfi), 800);
         }) as EventListener);
-        // Tap zones: left/right turn the page, the middle toggles the chrome.
+        // Middle taps toggle the chrome; the edge zones are plain buttons over
+        // the book, so paging does not depend on iframe coordinates.
         view.addEventListener("load", ((event: CustomEvent<{ doc?: Document }>) => {
           const doc = event.detail?.doc;
           if (!doc) return;
-          doc.addEventListener("click", (click: MouseEvent) => {
-            const target = click.target as Element | null;
-            if (target?.closest?.("a[href]")) return;
+          const isTapTarget = (target: EventTarget | null) => {
+            const el = target as Element | null;
+            if (el?.closest?.("a[href]")) return false;
             const selection = doc.getSelection();
-            if (selection && !selection.isCollapsed) return;
-            /*
-             * foliate lays the whole chapter out in one wide iframe and scrolls
-             * it inside a closed shadow root, so `clientX` alone is not the
-             * position on screen. offsetting by the iframe's own rect against
-             * the visible host cancels that scroll out.
-             */
-            const frameEl = doc.defaultView?.frameElement as HTMLElement | null;
-            const host = doc.defaultView?.parent?.document.querySelector(".foliate-host");
-            if (!frameEl || !host) return;
-            const hostRect = host.getBoundingClientRect();
-            const x = click.clientX + frameEl.getBoundingClientRect().left - hostRect.left;
-            if (x < hostRect.width * 0.3) void view.prev();
-            else if (x > hostRect.width * 0.7) void view.next();
-            else setIsChromeVisible((visible) => !visible);
+            return !(selection && !selection.isCollapsed);
+          };
+          let lastTap = 0;
+          const toggleChrome = () => {
+            lastTap = Date.now();
+            setIsChromeVisible((visible) => !visible);
+          };
+          doc.addEventListener("click", (click: MouseEvent) => {
+            if (Date.now() - lastTap < 700) return; // the click a touch already handled
+            if (!isTapTarget(click.target)) return;
+            toggleChrome();
+          });
+          // A touch that moves slightly prevents the click, so handle taps
+          // from the touch stream as well.
+          let startX = 0, startY = 0, startTime = 0;
+          doc.addEventListener("touchstart", (touch: TouchEvent) => {
+            const point = touch.changedTouches[0];
+            if (!point) return;
+            startX = point.clientX; startY = point.clientY; startTime = Date.now();
+          }, { passive: true });
+          doc.addEventListener("touchend", (touch: TouchEvent) => {
+            const point = touch.changedTouches[0];
+            if (!point) return;
+            const moved = Math.hypot(point.clientX - startX, point.clientY - startY);
+            if (moved > 12 || Date.now() - startTime > 700) return;
+            if (!isTapTarget(touch.target)) return;
+            toggleChrome();
           });
         }) as EventListener);
         hostRef.current?.append(view);
@@ -248,7 +285,11 @@ function ReaderPage() {
   return <MotionConfig reducedMotion="user"><VStack className="reader-page" gap={0}>
     {textReader
       ? <div ref={textHostRef} className="text-reader-host" onClick={handleTextTap}><TextReader bookId={book.id} /></div>
-      : <section ref={hostRef} className="foliate-host" aria-label="EPUB 阅读区" />}
+      : <>
+        <section ref={hostRef} className="foliate-host" aria-label="EPUB 阅读区" />
+        <button type="button" tabIndex={-1} aria-label="上一页" className="reader-tap-zone reader-tap-zone-left" onClick={() => void viewRef.current?.prev()} />
+        <button type="button" tabIndex={-1} aria-label="下一页" className="reader-tap-zone reader-tap-zone-right" onClick={() => void viewRef.current?.next()} />
+      </>}
     <AnimatePresence>
       {isChromeVisible ? <motion.div
         key="reader-chrome-top"

@@ -3,6 +3,7 @@ package app.tauri.systembars
 import android.app.Activity
 import android.graphics.Color
 import android.os.Build
+import android.view.WindowManager
 import android.webkit.WebView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
@@ -17,6 +18,11 @@ import app.tauri.plugin.Plugin
 @InvokeArg
 class ThemeArgs {
   lateinit var theme: String
+}
+
+@InvokeArg
+class KeepScreenOnArgs {
+  var enabled: Boolean = false
 }
 
 /**
@@ -66,6 +72,26 @@ class SystemBarsPlugin(private val activity: Activity) : Plugin(activity) {
       // true = dark icons for a light background, false = light icons.
       controller.isAppearanceLightStatusBars = useDarkIcons
       controller.isAppearanceLightNavigationBars = useDarkIcons
+
+      invoke.resolve()
+    }
+  }
+
+  /**
+   * Keeps the screen awake while the reader is open. Android's
+   * `FLAG_KEEP_SCREEN_ON` needs no permission and is cleared when the activity
+   * leaves the foreground, so the WebView re-applies it on unmount anyway.
+   */
+  @Command
+  fun set_keep_screen_on(invoke: Invoke) {
+    val args = invoke.parseArgs(KeepScreenOnArgs::class.java)
+
+    activity.runOnUiThread {
+      if (args.enabled) {
+        activity.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+      } else {
+        activity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+      }
 
       invoke.resolve()
     }

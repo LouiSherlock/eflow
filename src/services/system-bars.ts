@@ -44,6 +44,20 @@ export async function getSystemInsets(): Promise<SystemInsets | null> {
 }
 
 /**
+ * Keeps the Android screen awake while reading. The window flag needs no
+ * permission and is cleared when the reader unmounts.
+ */
+export async function setKeepScreenOn(enabled: boolean): Promise<void> {
+  if (!hasNativeSystemBars()) return;
+
+  try {
+    await invoke(`${ANDROID_PLUGIN}|set_keep_screen_on`, { enabled });
+  } catch (error) {
+    console.error("Failed to set Android keep-screen-on:", error);
+  }
+}
+
+/**
  * Keeps the status and navigation bar icons readable against the page
  * background (dark icons on light, light icons on dark).
  */

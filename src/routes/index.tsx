@@ -11,7 +11,8 @@ import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
 import { useAnnounce } from "@astryxdesign/core/hooks";
 import { BookOpen, FilePlus2, Search } from "lucide-react";
-import { BookCard, BookCover } from "../components/book-card";
+import { BookCover } from "../components/book-card";
+import { BookGrid } from "../components/book-grid";
 import { RemoveBookDialog } from "../components/remove-book-dialog";
 import { type Book, useLibrary } from "../services/library";
 
@@ -56,7 +57,7 @@ function LibraryPage() {
     {feedback ? <Banner status={feedback.status} title={feedback.message} isDismissable onDismiss={() => setFeedback(undefined)} /> : null}
     {recent ? <Link to="/reader/$bookId" params={{ bookId: recent.id }} className="continue-reading"><Card className="continue-card" padding={4}><HStack align="center" gap={4}><BookCover book={recent} variant="hero" /><VStack className="continue-copy" gap={2}><Text type="supporting" color="secondary">继续阅读</Text><Heading level={3}>{recent.title}</Heading><Text type="body" color="secondary">{recent.author}</Text><progress className="book-progress" value={recent.progress} max="100" /><Text type="supporting" color="secondary">已读 {Math.round(recent.progress)}%</Text></VStack></HStack></Card></Link> : null}
     <VStack gap={1}><Heading level={3}>全部书籍</Heading><Text type="supporting" color="secondary">{isReady ? `${books.length} 本` : "正在载入书架"}</Text></VStack>
-    {books.length ? <section className="book-grid" aria-label="书籍列表">{books.map((book) => <BookCard key={book.id} book={book} onToggleFavorite={() => toggleFavorite(book.id)} onRequestRemove={setPendingRemoval} />)}</section> : <Card className="empty-library" padding={5}><VStack align="center" gap={3}><Icon className="empty-icon" icon={BookOpen} /><Heading level={3}>书架准备好了</Heading><Text type="body" color="secondary">导入 EPUB 或 TXT，阅读进度会保存在本机。</Text><Button label="选择书籍" variant="primary" icon={<Icon icon={FilePlus2} />} onClick={() => fileRef.current?.click()} /></VStack></Card>}
+    {books.length ? <BookGrid books={books} label="书籍列表" onToggleFavorite={(book) => toggleFavorite(book.id)} onRequestRemove={setPendingRemoval} /> : <Card className="empty-library" padding={5}><VStack align="center" gap={3}><Icon className="empty-icon" icon={BookOpen} /><Heading level={3}>书架准备好了</Heading><Text type="body" color="secondary">导入 EPUB 或 TXT，阅读进度会保存在本机。</Text><Button label="选择书籍" variant="primary" icon={<Icon icon={FilePlus2} />} onClick={() => fileRef.current?.click()} /></VStack></Card>}
     <RemoveBookDialog
       book={pendingRemoval}
       onCancel={() => setPendingRemoval(undefined)}

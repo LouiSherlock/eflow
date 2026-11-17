@@ -12,7 +12,10 @@ import { VStack } from "@astryxdesign/core/VStack";
 import { Bookmark, BookmarkMinus, MoreHorizontal, Trash2 } from "lucide-react";
 import type { Book } from "../services/library";
 
-export function BookCover({ book, variant = "grid" }: { book: Book; variant?: "grid" | "hero" }) {
+export function BookCover({ book, variant = "grid" }: {
+  book: Book;
+  variant?: "grid" | "hero";
+}) {
   const [url, setUrl] = useState<string>();
   useEffect(() => {
     if (!book.cover) return;
@@ -34,7 +37,13 @@ export function BookCard({ book, onToggleFavorite, onRequestRemove }: {
   const toast = useToast();
   return <Card className="book-card" padding={2}>
     <VStack gap={2}>
-      <Link to="/book/$bookId" params={{ bookId: book.id }} className="book-cover-link"><BookCover book={book} /></Link>
+      <Link
+        to="/book/$bookId"
+        params={{ bookId: book.id }}
+        className="book-cover-link"
+      >
+        <BookCover book={book} />
+      </Link>
       <HStack align="start" justify="between" gap={1}>
         <VStack className="book-meta" gap={1}>
           <Heading level={5} maxLines={1}>{book.title}</Heading>

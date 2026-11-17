@@ -307,6 +307,18 @@
           "markdownDescription": "Denies the get_insets command without any pre-configured scope."
         },
         {
+          "description": "Enables the set_keep_screen_on command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-set-keep-screen-on",
+          "markdownDescription": "Enables the set_keep_screen_on command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the set_keep_screen_on command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-set-keep-screen-on",
+          "markdownDescription": "Denies the set_keep_screen_on command without any pre-configured scope."
+        },
+        {
           "description": "Enables the set_theme command without any pre-configured scope.",
           "type": "string",
           "const": "allow-set-theme",
@@ -319,10 +331,10 @@
           "markdownDescription": "Denies the set_theme command without any pre-configured scope."
         },
         {
-          "description": "Default permissions for the system-bars plugin: apply the system bar theme and read the safe-area insets.\n#### This default permission set includes:\n\n- `allow-set-theme`\n- `allow-get-insets`",
+          "description": "Default permissions for the system-bars plugin: apply the system bar theme, read the safe-area insets, and keep the screen awake.\n#### This default permission set includes:\n\n- `allow-set-theme`\n- `allow-get-insets`\n- `allow-set-keep-screen-on`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Default permissions for the system-bars plugin: apply the system bar theme and read the safe-area insets.\n#### This default permission set includes:\n\n- `allow-set-theme`\n- `allow-get-insets`"
+          "markdownDescription": "Default permissions for the system-bars plugin: apply the system bar theme, read the safe-area insets, and keep the screen awake.\n#### This default permission set includes:\n\n- `allow-set-theme`\n- `allow-get-insets`\n- `allow-set-keep-screen-on`"
         }
       ]
     }

@@ -199,13 +199,26 @@ function ReaderPage() {
     if (selectedBook.format === "TXT") { setStatus("ready"); return; }
     let cancelled = false;
     let saveTimer: number | undefined;
+    let view: FoliateView | null = null;
+    const closeView = (target: FoliateView) => {
+      target.close();
+      // foliate-js may still finish open() after this effect was cleaned up.
+      // Clear the old renderer reference so a later cleanup can destroy a
+      // renderer that was created after this one.
+      target.renderer = undefined;
+      target.remove();
+      if (viewRef.current === target) viewRef.current = null;
+    };
     const open = async () => {
       try {
         const stored = await getBookFile(selectedBook.id);
+        if (cancelled) return;
         if (!stored || cancelled) throw new Error("找不到本地书籍文件，请重新导入。");
         const file = new File([stored.file], `${selectedBook.title}.epub`, { type: "application/epub+zip" });
-        const view = document.createElement("foliate-view") as FoliateView;
+        view = document.createElement("foliate-view") as FoliateView;
+        const currentView = view;
         view.addEventListener("relocate", ((event: CustomEvent<RelocateDetail>) => {
+          if (cancelled) return;
           const nextProgress = Math.round((event.detail.fraction ?? 0) * 100);
           setProgress(nextProgress);
           setActiveHref(event.detail.tocItem?.href);
@@ -215,6 +228,7 @@ function ReaderPage() {
         // Middle taps toggle the chrome; the edge zones are plain buttons over
         // the book, so paging does not depend on iframe coordinates.
         view.addEventListener("load", ((event: CustomEvent<{ doc?: Document }>) => {
+          if (cancelled) return;
           const doc = event.detail?.doc;
           if (!doc) return;
           const isTapTarget = (target: EventTarget | null) => {
@@ -253,13 +267,22 @@ function ReaderPage() {
         hostRef.current?.append(view);
         viewRef.current = view;
         await view.open(file);
-        view.renderer?.setStyles?.(readerCss(settings.fontScale, settings.lineHeight, settings.paragraphSpacing, settings.justify, themeRef.current));
-        await view.init({ lastLocation: selectedBook.cfi, showTextStart: true });
-        if (!cancelled) { setToc(view.book?.toc ?? []); setStatus("ready"); }
-      } catch (reason) { if (!cancelled) { setError(reason instanceof Error ? reason.message : "无法打开这本 EPUB。"); setStatus("error"); } }
+        if (cancelled) { closeView(currentView); return; }
+        currentView.renderer?.setStyles?.(readerCss(settings.fontScale, settings.lineHeight, settings.paragraphSpacing, settings.justify, themeRef.current));
+        await currentView.init({ lastLocation: selectedBook.cfi, showTextStart: true });
+        if (!cancelled) { setToc(currentView.book?.toc ?? []); setStatus("ready"); }
+        else closeView(currentView);
+      } catch (reason) {
+        if (view) closeView(view);
+        if (!cancelled) { setError(reason instanceof Error ? reason.message : "无法打开这本 EPUB。"); setStatus("error"); }
+      }
     };
     void open();
-    return () => { cancelled = true; window.clearTimeout(saveTimer); viewRef.current?.close(); viewRef.current?.remove(); viewRef.current = null; };
+    return () => {
+      cancelled = true;
+      window.clearTimeout(saveTimer);
+      if (view) closeView(view);
+    };
   }, [bookId, book?.format, isReady, navigate, updateProgress]);
 
   // Typography and theme changes repaginate the open book without reopening it.

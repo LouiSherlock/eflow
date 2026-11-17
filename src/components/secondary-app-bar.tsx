@@ -19,7 +19,7 @@ export function SecondaryAppBar({ title, onBack, className, children }: {
     gap={3}
   >
     <IconButton className="secondary-back-button" label="返回" icon={<Icon icon={ArrowLeft} />} variant="ghost" onClick={onBack} />
-    <Heading level={4} className="secondary-app-title" maxLines={1}>{title}</Heading>
+    <Heading level={4} className="secondary-app-title" maxLines={1} hasTruncateTooltip={false}>{title}</Heading>
     {children}
   </HStack>;
 }

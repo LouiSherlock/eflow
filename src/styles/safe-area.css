@@ -189,7 +189,7 @@ body {
   padding-block-start: var(--status-bar-height);
   padding-inline: calc(var(--safe-left) + var(--spacing-2))
     calc(var(--safe-right) + var(--spacing-4));
-  background: var(--color-background-body, light-dark(#ffffff, #121212));
+  background: var(--color-background-surface);
   border-bottom: 1px solid var(--color-border, light-dark(#e5e5e5, #333333));
 }
 

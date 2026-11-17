@@ -45,7 +45,7 @@ export function BookCard({ book, onToggleFavorite, onRequestRemove }: {
           renderTrigger={(props) => (
             <IconButton
               {...props}
-              label={`《${book.title}》更多操作`}
+              label={`《${book.title}》`}
               variant="ghost"
               size="sm"
               icon={<Icon icon={MoreHorizontal} />}

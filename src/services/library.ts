@@ -38,6 +38,23 @@ function humanText(value: unknown): string {
 }
 function formatFrom(file: File): BookFormat | null { const extension = file.name.split(".").pop()?.toLowerCase(); return extension === "epub" ? "EPUB" : extension === "txt" ? "TXT" : null; }
 
+/**
+ * Reads the title a file would get on import, without storing anything.
+ * Mirrors `importBook` so the duplicate check uses the same name.
+ */
+export async function peekBookTitle(file: File): Promise<string | null> {
+  const format = formatFrom(file);
+  const fallback = file.name.replace(/\.[^.]+$/, "");
+  if (!format) return null;
+  if (format === "TXT") return fallback;
+  try {
+    const parsed = await makeBook(file);
+    return humanText(parsed.metadata?.title) || fallback;
+  } catch {
+    return null;
+  }
+}
+
 export const useLibrary = create<LibraryState>((set, get) => ({
   books: [],
   isReady: false,

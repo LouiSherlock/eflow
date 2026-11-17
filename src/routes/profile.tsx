@@ -17,7 +17,7 @@ function ProfilePage() {
       <ListItem label="本地书架" description={`已导入 ${count} 本书`} startContent={<Icon icon={BookMarked} />} />
       <ListItem label="阅读设置" description="主题、字号和排版" href="/settings" startContent={<Icon icon={Settings} />} />
       <ListItem label="常见问题" description="支持的文件与常见问题" href="/help" startContent={<Icon icon={CircleHelp} />} />
-      <ListItem label="关于纸间" description="本机离线阅读器" href="/about" startContent={<Icon icon={UserRound} />} />
+      <ListItem label="关于阅流" description="本机离线阅读器" href="/about" startContent={<Icon icon={UserRound} />} />
     </List>
   </VStack>;
 }

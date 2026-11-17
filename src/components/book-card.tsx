@@ -24,7 +24,7 @@ export function BookCover({ book, variant = "grid" }: {
     return () => URL.revokeObjectURL(nextUrl);
   }, [book.cover]);
   return <section className={`book-cover book-cover-${variant}`} aria-label={`${book.title} 封面`}>
-    {url ? <img src={url} alt="" /> : <VStack className="cover-fallback" align="center" justify="between" gap={2}><Text type="supporting" color="inherit">{book.format}</Text><Heading level={3} color="inherit">{book.title.slice(0, 1)}</Heading><Text type="supporting" color="inherit">纸间</Text></VStack>}
+    {url ? <img src={url} alt="" /> : <VStack className="cover-fallback" align="center" justify="between" gap={2}><Text type="supporting" color="inherit">{book.format}</Text><Heading level={3} color="inherit">{book.title.slice(0, 1)}</Heading><Text type="supporting" color="inherit">阅流</Text></VStack>}
   </section>;
 }
 

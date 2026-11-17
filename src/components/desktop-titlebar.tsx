@@ -129,7 +129,7 @@ export function DesktopTitleBar() {
       data-tauri-drag-region
     >
       <Heading level={5} data-tauri-drag-region>
-        Tauri App
+        阅流
       </Heading>
       <StackItem
         as="span"

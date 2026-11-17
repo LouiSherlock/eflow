@@ -17,7 +17,7 @@ function AboutPage() {
     <VStack gap={4} paddingBlock={4}>
       <Section padding={4} dividers={["bottom"]}>
         <VStack gap={1}>
-          <Heading level={3}>纸间</Heading>
+          <Heading level={3}>阅流</Heading>
           <Text type="supporting" color="secondary">本地离线 EPUB / TXT 阅读器</Text>
           <Text type="supporting" color="secondary">版本 {__APP_VERSION__}</Text>
         </VStack>
@@ -26,7 +26,7 @@ function AboutPage() {
       <Section padding={4} dividers={["bottom"]}>
         <VStack gap={2}>
           <Heading level={5}>版权声明</Heading>
-          <Text type="body" color="secondary">© {YEAR} 纸间。本应用是供个人使用的本地阅读工具，不提供、也不分发任何书籍内容。</Text>
+          <Text type="body" color="secondary">© {YEAR} 阅流。本应用是供个人使用的本地阅读工具，不提供、也不分发任何书籍内容。</Text>
           <Text type="body" color="secondary">导入书籍的著作权归原作者及出版方所有，请仅使用你合法持有的副本。未经授权复制或传播受版权保护的作品可能违反法律。</Text>
         </VStack>
       </Section>

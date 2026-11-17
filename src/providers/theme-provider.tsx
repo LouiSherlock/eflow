@@ -1,64 +1,34 @@
 import {
   createContext,
-  useCallback,
   useContext,
   useEffect,
   useMemo,
-  useState,
   type ReactNode,
 } from "react";
 
-import {
-  getThemeMode,
-  saveThemeMode,
-  systemPrefersDark,
-  updateNativeTheme,
-  type ResolvedTheme,
-  type ThemeMode,
-} from "../services/theme";
+import { updateNativeTheme, type ResolvedTheme } from "../services/theme";
 
 interface ThemeModeContextValue {
-  /** What the user picked: follow the OS, force light, or force dark. */
-  mode: ThemeMode;
-  /** What is actually painted right now. */
+  /** The app ships one dark theme, so this is always "dark". */
   theme: ResolvedTheme;
-  setMode: (mode: ThemeMode) => void;
 }
 
 const ThemeModeContext = createContext<ThemeModeContextValue | null>(null);
 
 /**
- * Owns the app's theme preference. Astryx's <Theme mode> consumes `mode`;
- * Android's system bars consume the resolved `theme`.
+ * Owns the app's single resolved theme.
+ *
+ * `gothic` only defines a dark palette, so the app is dark-only; this provider
+ * keeps the html classes, `color-scheme`, and the Android system-bar icons in
+ * step with that one value.
  */
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [mode, setModeState] = useState<ThemeMode>(getThemeMode);
-  const [systemDark, setSystemDark] = useState(systemPrefersDark);
-
-  const theme: ResolvedTheme = mode === "system"
-    ? (systemDark ? "dark" : "light")
-    : mode;
-
-  const setMode = useCallback((nextMode: ThemeMode) => {
-    saveThemeMode(nextMode);
-    setModeState(nextMode);
-  }, []);
-
-  // Follow the OS while in "system" mode.
-  useEffect(() => {
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleChange = (event: MediaQueryListEvent) => {
-      setSystemDark(event.matches);
-    };
-
-    media.addEventListener("change", handleChange);
-    return () => media.removeEventListener("change", handleChange);
-  }, []);
+  const theme: ResolvedTheme = "dark";
 
   // Keep Tailwind's `dark:` variant and native form controls in step.
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.toggle("dark", theme === "dark");
+    root.classList.add("dark");
     root.style.colorScheme = theme;
   }, [theme]);
 
@@ -79,10 +49,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       document.removeEventListener("visibilitychange", handleVisibility);
   }, [theme]);
 
-  const value = useMemo(
-    () => ({ mode, theme, setMode }),
-    [mode, theme, setMode],
-  );
+  const value = useMemo(() => ({ theme }), [theme]);
 
   return (
     <ThemeModeContext.Provider value={value}>

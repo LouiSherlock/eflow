@@ -18,10 +18,10 @@ import { queryClient } from "./lib/query-client";
  * `Theme` is `display: contents`, so it does not disturb the mobile frame.
  */
 function AppRoot() {
-  const { mode } = useThemeMode();
+  const { theme } = useThemeMode();
 
   return (
-    <Theme theme={themes[defaultThemeSlug]} mode={mode}>
+    <Theme theme={themes[defaultThemeSlug]} mode={theme}>
       <LinkProvider component={TanStackLinkAdapter}>
         <ToastViewport position="topEnd">
           <RouterProvider router={router} />

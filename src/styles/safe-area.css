@@ -345,7 +345,6 @@ body {
   flex-direction: column;
   width: min(20rem, 86%);
   background: var(--color-background-surface);
-  box-shadow: var(--shadow-high);
 }
 
 .reader-toc-header {

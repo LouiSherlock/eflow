@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Banner } from "@astryxdesign/core/Banner";
+import { AlertDialog } from "@astryxdesign/core/AlertDialog";
 import { Button } from "@astryxdesign/core/Button";
 import { Card } from "@astryxdesign/core/Card";
 import { Heading } from "@astryxdesign/core/Heading";
@@ -14,7 +15,7 @@ import { BookOpen, FilePlus2, Search } from "lucide-react";
 import { BookCover } from "../components/book-card";
 import { BookGrid } from "../components/book-grid";
 import { RemoveBookDialog } from "../components/remove-book-dialog";
-import { type Book, useLibrary } from "../services/library";
+import { type Book, peekBookTitle, useLibrary } from "../services/library";
 
 export const Route = createFileRoute("/")({ component: LibraryPage });
 
@@ -26,14 +27,38 @@ function LibraryPage() {
   const announce = useAnnounce();
   const [isImporting, setIsImporting] = useState(false);
   const [pendingRemoval, setPendingRemoval] = useState<Book>();
+  const [pendingDuplicates, setPendingDuplicates] = useState<{ files: File[]; titles: string[] }>();
   useEffect(() => { void hydrate(); }, [hydrate]);
   const recent = books.filter((book) => book.progress > 0).sort((a, b) => b.updatedAt - a.updatedAt)[0];
 
-  async function handleImport(files: FileList | null) {
-    if (!files?.length) return;
+  // Success feedback dismisses itself; errors stay until the user closes them.
+  useEffect(() => {
+    if (feedback?.status !== "success") return;
+    const timeout = window.setTimeout(() => setFeedback(undefined), 3000);
+    return () => window.clearTimeout(timeout);
+  }, [feedback]);
+
+  async function handleImport(fileList: FileList | null) {
+    if (!fileList?.length) return;
+    const files = Array.from(fileList);
+    if (fileRef.current) fileRef.current.value = "";
+
+    const titles: string[] = [];
+    for (const file of files) {
+      const title = await peekBookTitle(file);
+      if (title && books.some((book) => book.title === title) && !titles.includes(title)) titles.push(title);
+    }
+    if (titles.length) {
+      setPendingDuplicates({ files, titles });
+      return;
+    }
+    await runImport(files);
+  }
+
+  async function runImport(files: File[]) {
     setFeedback(undefined); setIsImporting(true);
     try {
-      for (const file of Array.from(files)) await importBook(file);
+      for (const file of files) await importBook(file);
       const message = `已导入 ${files.length} 本书，可以开始阅读。`;
       setFeedback({ status: "success", message });
       announce(message);
@@ -42,7 +67,7 @@ function LibraryPage() {
       setFeedback({ status: "error", message });
       announce(message, "assertive");
     }
-    finally { setIsImporting(false); if (fileRef.current) fileRef.current.value = ""; }
+    finally { setIsImporting(false); }
   }
 
   return <VStack className="library-page" gap={5}>
@@ -58,6 +83,19 @@ function LibraryPage() {
     {recent ? <Link to="/reader/$bookId" params={{ bookId: recent.id }} className="continue-reading"><Card className="continue-card" padding={4}><HStack align="center" gap={4}><BookCover book={recent} variant="hero" /><VStack className="continue-copy" gap={2}><Text type="supporting" color="secondary">继续阅读</Text><Heading level={3}>{recent.title}</Heading><Text type="body" color="secondary">{recent.author}</Text><progress className="book-progress" value={recent.progress} max="100" /><Text type="supporting" color="secondary">已读 {Math.round(recent.progress)}%</Text></VStack></HStack></Card></Link> : null}
     <VStack gap={1}><Heading level={3}>全部书籍</Heading><Text type="supporting" color="secondary">{isReady ? `${books.length} 本` : "正在载入书架"}</Text></VStack>
     {books.length ? <BookGrid books={books} label="书籍列表" onToggleFavorite={(book) => toggleFavorite(book.id)} onRequestRemove={setPendingRemoval} /> : <Card className="empty-library" padding={5}><VStack align="center" gap={3}><Icon className="empty-icon" icon={BookOpen} /><Heading level={3}>书架准备好了</Heading><Text type="body" color="secondary">导入 EPUB 或 TXT，阅读进度会保存在本机。</Text><Button label="选择书籍" variant="primary" icon={<Icon icon={FilePlus2} />} onClick={() => fileRef.current?.click()} /></VStack></Card>}
+    <AlertDialog
+      isOpen={Boolean(pendingDuplicates)}
+      onOpenChange={(isOpen) => { if (!isOpen) setPendingDuplicates(undefined); }}
+      title="该书已在书架"
+      description={pendingDuplicates ? `《${pendingDuplicates.titles.join("》《")}》已经在书架里，确定再次导入？` : ""}
+      cancelLabel="取消"
+      actionLabel="再次导入"
+      onAction={() => {
+        const pending = pendingDuplicates;
+        setPendingDuplicates(undefined);
+        if (pending) void runImport(pending.files);
+      }}
+    />
     <RemoveBookDialog
       book={pendingRemoval}
       onCancel={() => setPendingRemoval(undefined)}

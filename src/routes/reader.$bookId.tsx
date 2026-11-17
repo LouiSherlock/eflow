@@ -7,8 +7,9 @@ import { HStack } from "@astryxdesign/core/HStack";
 import { Icon } from "@astryxdesign/core/Icon";
 import { IconButton } from "@astryxdesign/core/IconButton";
 import { Text } from "@astryxdesign/core/Text";
+import { Spinner } from "@astryxdesign/core/Spinner";
 import { VStack } from "@astryxdesign/core/VStack";
-import { List, X } from "lucide-react";
+import { ChevronRight, CircleAlert, List, X } from "lucide-react";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { SecondaryAppBar } from "../components/secondary-app-bar";
 import { useThemeMode } from "../providers/theme-provider";
@@ -18,7 +19,6 @@ import { useReaderSettings } from "../services/reader-settings";
 export const Route = createFileRoute("/reader/$bookId")({ component: ReaderPage });
 
 type TocItem = { label: string; href: string; subitems?: TocItem[] };
-type FlatTocItem = TocItem & { depth: number };
 type RelocateDetail = { fraction?: number; cfi?: string; tocItem?: { href?: string } };
 type FoliateView = HTMLElement & { open: (file: File) => Promise<void>; init: (options: { lastLocation?: string; showTextStart: boolean }) => Promise<void>; prev: () => Promise<void>; next: () => Promise<void>; goTo: (href: string) => Promise<void>; goToFraction: (fraction: number) => Promise<void>; book?: { toc?: TocItem[]; metadata?: { title?: unknown } }; renderer?: { setStyles?: (css: string) => void }; close: () => void };
 function readerCss(fontScale: number, lineHeight: number, paragraphSpacing: number, justify: boolean, theme: "light" | "dark") {
@@ -50,8 +50,51 @@ function readerCss(fontScale: number, lineHeight: number, paragraphSpacing: numb
   p, li, blockquote { line-height: ${lineHeight}; margin-block: ${paragraphSpacing}em; text-align: ${justify ? "justify" : "start"}; }
   img, svg { max-width: 100%; height: auto; }${darkOverride}`;
 }
-function flattenToc(items: TocItem[], depth = 0): FlatTocItem[] {
-  return items.flatMap((item) => [{ ...item, depth }, ...flattenToc(item.subitems ?? [], depth + 1)]);
+function tocKey(item: TocItem, depth: number) { return `${depth}-${item.href}-${item.label}`; }
+
+/**
+ * Recursive chapter list. Nested entries are only mounted while their parent
+ * is expanded — collapsed branches are absent from the DOM, not hidden.
+ */
+function TocBranch({ items, depth, activeHref, expanded, onToggle, onNavigate }: {
+  items: TocItem[];
+  depth: number;
+  activeHref?: string;
+  expanded: ReadonlySet<string>;
+  onToggle: (key: string) => void;
+  onNavigate: (href: string) => void;
+}) {
+  return <>{items.map((item) => {
+    const key = tocKey(item, depth);
+    const children = item.subitems ?? [];
+    const isOpen = expanded.has(key);
+    return <div key={key}>
+      <div className="reader-toc-row" style={{ paddingInlineStart: `calc(var(--spacing-4) + ${depth} * var(--spacing-3))` }}>
+        <button
+          type="button"
+          className="reader-toc-item"
+          data-active={activeHref === item.href}
+          onClick={() => onNavigate(item.href)}
+        >{item.label}</button>
+        {children.length ? <button
+          type="button"
+          className="reader-toc-toggle"
+          data-open={isOpen}
+          aria-expanded={isOpen}
+          aria-label={isOpen ? `收起 ${item.label}` : `展开 ${item.label}`}
+          onClick={() => onToggle(key)}
+        ><Icon icon={ChevronRight} size="xsm" /></button> : null}
+      </div>
+      {children.length && isOpen ? <TocBranch
+        items={children}
+        depth={depth + 1}
+        activeHref={activeHref}
+        expanded={expanded}
+        onToggle={onToggle}
+        onNavigate={onNavigate}
+      /> : null}
+    </div>;
+  })}</>;
 }
 
 const FONT_MIN = 0.8;
@@ -80,9 +123,9 @@ function ReaderPage() {
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [scrubValue, setScrubValue] = useState(0);
   const [isTocOpen, setIsTocOpen] = useState(false);
+  const [expandedToc, setExpandedToc] = useState<ReadonlySet<string>>(() => new Set());
   const [isFontOpen, setIsFontOpen] = useState(false);
   const [fontPreview, setFontPreview] = useState(settings.fontScale);
-  const flatToc = flattenToc(toc);
 
   function goBack() {
     if (router.history.canGoBack()) {
@@ -95,6 +138,15 @@ function ReaderPage() {
   function seekTo(percent: number) {
     setIsScrubbing(false);
     void viewRef.current?.goToFraction(percent / 100);
+  }
+
+  function toggleTocBranch(key: string) {
+    setExpandedToc((current) => {
+      const next = new Set(current);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
   }
 
   function commitFont(value: number) {
@@ -262,15 +314,14 @@ function ReaderPage() {
             <IconButton label="关闭目录" variant="ghost" icon={<Icon icon={X} />} onClick={() => setIsTocOpen(false)} />
           </HStack>
           <div className="reader-toc-list">
-            {flatToc.map((item) => <button
-              key={`${item.depth}-${item.href}-${item.label}`}
-              type="button"
-              className="reader-toc-item"
-              data-active={activeHref === item.href}
-              style={{ paddingInlineStart: `calc(var(--spacing-4) + ${item.depth} * var(--spacing-3))` }}
-              onClick={() => { void viewRef.current?.goTo(item.href); setIsTocOpen(false); }}
-            >{item.label}</button>)}
-            {!flatToc.length ? <Text className="reader-toc-empty" type="body" color="secondary">这本书没有目录。</Text> : null}
+            {toc.length ? <TocBranch
+              items={toc}
+              depth={0}
+              activeHref={activeHref}
+              expanded={expandedToc}
+              onToggle={toggleTocBranch}
+              onNavigate={(href) => { void viewRef.current?.goTo(href); setIsTocOpen(false); }}
+            /> : <Text className="reader-toc-empty" type="body" color="secondary">这本书没有目录。</Text>}
           </div>
         </motion.section>
       </motion.div> : null}
@@ -314,8 +365,25 @@ function ReaderPage() {
         </HStack>
       </motion.section> : null}
     </AnimatePresence>
-    {status === "loading" ? <VStack className="reader-state" align="center" justify="center" gap={2}><Heading level={4}>正在排版</Heading><Text type="body" color="secondary">首次打开会根据当前字体生成分页。</Text></VStack> : null}
-    {status === "error" ? <VStack className="reader-state" align="center" justify="center" gap={3}><Heading level={4}>无法打开 EPUB</Heading><Text type="body" color="secondary">{error}</Text><Button label="返回详情" onClick={() => void navigate({ to: "/book/$bookId", params: { bookId } })} /></VStack> : null}
+    {status === "loading" ? <VStack className="reader-state" align="center" justify="center" gap={2} padding={6}>
+      <VStack className="reader-state-card" align="center" gap={3} padding={6}>
+        <Spinner size="xl" />
+        <VStack align="center" gap={1}>
+          <Heading level={4}>正在排版</Heading>
+          <Text type="body" color="secondary">首次打开会根据当前字体生成分页。</Text>
+        </VStack>
+      </VStack>
+    </VStack> : null}
+    {status === "error" ? <VStack className="reader-state" align="center" justify="center" gap={2} padding={6}>
+      <VStack className="reader-state-card" align="center" gap={3} padding={6}>
+        <Icon className="reader-state-icon" icon={CircleAlert} />
+        <VStack align="center" gap={1}>
+          <Heading level={4}>无法打开 EPUB</Heading>
+          <Text type="body" color="secondary">{error}</Text>
+        </VStack>
+        <Button label="返回详情" onClick={() => void navigate({ to: "/book/$bookId", params: { bookId } })} />
+      </VStack>
+    </VStack> : null}
   </VStack></MotionConfig>;
 }
 

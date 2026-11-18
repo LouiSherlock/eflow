@@ -22,22 +22,28 @@ export const Route = createFileRoute("/reader/$bookId")({ component: ReaderPage 
 type TocItem = { label: string; href: string; subitems?: TocItem[] };
 type RelocateDetail = { fraction?: number; cfi?: string; tocItem?: { href?: string } };
 type FoliateView = HTMLElement & { open: (file: File) => Promise<void>; init: (options: { lastLocation?: string; showTextStart: boolean }) => Promise<void>; prev: () => Promise<void>; next: () => Promise<void>; goTo: (href: string) => Promise<void>; goToFraction: (fraction: number) => Promise<void>; book?: { toc?: TocItem[]; metadata?: { title?: unknown } }; renderer?: { setStyles?: (css: string) => void }; close: () => void };
+/**
+ * Id painted on the book's own `<html>` so our theme rules outrank its CSS.
+ * Calibre exports style text with class selectors and `!important`
+ * (`div.sgc-toc-level-1 a { color: black !important }`), which beats any
+ * element-only selector, so `#id` specificity is what makes the theme win.
+ */
+const BOOK_ROOT_ID = "eflow-reader-root";
 function readerCss(fontScale: number, lineHeight: number, paragraphSpacing: number, justify: boolean, theme: "light" | "dark") {
   const root = getComputedStyle(document.documentElement);
   const background = root.getPropertyValue("--color-background-body").trim();
   const foreground = root.getPropertyValue("--color-text-primary").trim();
   const accent = root.getPropertyValue("--color-accent").trim();
   /*
-   * Calibre and other toolships hard-code near-black text (a `.calibre5`
-   * class, an inline `color`, or a `body { background: #fff }`), so inheriting
-   * `color` from `html` is not enough. In dark mode the content is repainted
-   * over the top; `!important` also beats the book's inline styles. Links keep
-   * the accent colour.
+   * Books hard-code near-black text (a `.calibre5` class, an inline `color`,
+   * or a `body { background: #fff }`). The `#BOOK_ROOT_ID` prefix outranks
+   * their class selectors and `!important` declarations; inline styles lose to
+   * author `!important` too, so the app theme always shows through.
    */
   const darkOverride = theme === "dark" ? `
-  html, body { background-color: ${background} !important; color: ${foreground} !important; }
-  body * { color: ${foreground} !important; background-color: transparent !important; }
-  a, a * { color: ${accent} !important; }
+  #${BOOK_ROOT_ID}, #${BOOK_ROOT_ID} body { background-color: ${background} !important; color: ${foreground} !important; }
+  #${BOOK_ROOT_ID} body * { color: inherit !important; background-color: transparent !important; }
+  #${BOOK_ROOT_ID} body a, #${BOOK_ROOT_ID} body a * { color: ${accent} !important; }
 ` : "";
   return `html {
     color-scheme: ${theme};
@@ -231,6 +237,15 @@ function ReaderPage() {
           if (cancelled) return;
           const doc = event.detail?.doc;
           if (!doc) return;
+          // Each loaded section is its own document; tag it so `readerCss`
+          // (applied by foliate to this doc) can outrank the book's CSS.
+          doc.documentElement.id = BOOK_ROOT_ID;
+          // Inline colours — including inline `!important`, which outranks any
+          // stylesheet — are dropped so the theme still wins; layout is kept.
+          doc.querySelectorAll<HTMLElement>("[style]").forEach((element) => {
+            element.style.removeProperty("color");
+            element.style.removeProperty("background-color");
+          });
           const isTapTarget = (target: EventTarget | null) => {
             const el = target as Element | null;
             if (el?.closest?.("a[href]")) return false;

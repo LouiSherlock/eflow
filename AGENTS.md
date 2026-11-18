@@ -14,7 +14,7 @@ Astryx v0.7.15 · 174 components · CLI: `pnpm exec astryx <cmd>`
 
 ## What this is
 
-「纸间」— an offline EPUB/TXT reader. Tauri 2 desktop/Android shell with a React 19 SPA. Data is local-only: IndexedDB for book files/covers, localStorage for metadata/settings. The Rust side currently has just a `greet` command plus the local `system-bars` plugin; there is no SQLite, `book://` protocol, or sync yet.
+「阅流」— an offline EPUB / MOBI / AZW3 / TXT reader for desktop and Android. Tauri 2 shell + React 19 SPA. Data is local-only: IndexedDB for book files/covers, localStorage for metadata/settings. The Rust side has just a `greet` command plus the local `system-bars` plugin; there is no SQLite, `book://` protocol, or sync yet, and `docs/` describes that future design rather than current code.
 
 ## Commands
 
@@ -29,9 +29,14 @@ pnpm exec astryx ...    # Astryx CLI
 ```
 
 - No test suite, ESLint, Prettier, or CI config exists. Do not invent `pnpm test`/`pnpm lint`; use `pnpm build` for verification.
-- Vite uses fixed port `1420` with `strictPort`; a stale process makes startup fail. README's `pnpm dev:stop` does **not** exist — kill whatever holds port 1420 manually.
+- Vite uses fixed port `1420` with `strictPort`; a stale process makes startup fail and there is no `dev:stop` script — kill whatever holds the port.
 - Rust build OOM on Windows: set `$env:CARGO_BUILD_JOBS=1` before `pnpm tauri build`.
 - Release APK signing is automatic only when `src-tauri/gen/android/keystore.properties` exists (copy `keystore.properties.example`, set the password). Without it, release builds succeed but stay unsigned. Never commit `release.jks`, `keystore.properties`, or other `*.jks`/`*.keystore` files; see `docs/签名问题.md`.
+- A version bump means four edits: `package.json` (feeds `__APP_VERSION__` on the About page via `vite.config.ts`), `src-tauri/tauri.conf.json` (desktop bundle + Android `versionName`), `src-tauri/Cargo.toml`, and the `tauri-app` entry in `src-tauri/Cargo.lock`. Android `versionCode` lives in the gitignored generated `gen/android/app/tauri.properties` and must be raised separately for store updates.
+
+## Dependencies
+
+- `foliate-js` is patched: `pnpm-workspace.yaml` `patchedDependencies` → `patches/foliate-js@1.0.1.patch` (switches its `ResizeObserver` cleanup to `disconnect()` in `fixed-layout.js`/`paginator.js`). Never edit `node_modules/foliate-js`; change the patch and re-run `pnpm install`, or the fix disappears.
 
 ## Frontend
 
@@ -40,32 +45,34 @@ pnpm exec astryx ...    # Astryx CLI
 - `src/router.tsx` uses `createHashHistory()` for Tauri's static file serving; don't switch to browser history.
 - Astryx `Link` is bridged to TanStack in `src/components/tanstack-link-adapter.tsx`. Use router `Link`/`useNavigate`, not raw `<a>`.
 - `src/routes/__root.tsx` renders `src/App.tsx`, which owns the shell: custom desktop title bar, mobile header/tab bar, and `<Outlet/>`.
-- Native calls must be guarded with `isTauri()` (and an Android UA check where relevant); the same code runs under `pnpm dev` in a browser.
+- Native calls are guarded in `src/services/system-bars.ts` (`isTauri()` + Android UA check); the same code runs under `pnpm dev` in a browser, so keep the guards.
 
 ## Styling
 
 - `src/globals.css` must stay the first import in `main.tsx`. Its `@layer reset, theme, base, astryx-base, astryx-theme, components, utilities` fixes cascade order for Astryx + Tailwind; reordering silently breaks overrides.
 - Tailwind v4 is wired (`@tailwindcss/vite` plus the imports in `globals.css`). Most existing UI uses Astryx components and plain classes in `src/App.css` / `src/styles/safe-area.css`; follow local style before adding utilities.
 - `.app`, `.app-header`, `.app-content`, `.app-tabbar` are defined in both `src/App.css` (layer `reset`) and `src/styles/safe-area.css` (layer `components`). The `safe-area.css` values win; edit that file for layout changes or your change may appear to do nothing.
-- Safe areas: native publishes `--native-safe-area-*` on `<html>`; CSS takes `max(env(safe-area-inset-*), var(--native-safe-area-*))`. Never hardcode status/navigation bar heights.
+- Safe areas: native publishes `--native-safe-area-*` on `<html>` (see `src/hooks/use-system-insets.ts`); CSS takes `max(env(safe-area-inset-*), var(--native-safe-area-*))`. Never hardcode status/navigation bar heights.
 - CSP is set in `index.html` (`script-src 'self'`, no remote origins). `@astryxdesign/theme-neutral/fonts.css` imports Figtree from Google Fonts, which this CSP blocks; don't assume it loads in the app.
 - `src/astryx-themes.ts` is generated; add themes with `pnpm exec astryx theme add <slug>` instead of editing it.
 
 ## Reader and storage
 
-- EPUB rendering uses the npm `foliate-js` `<foliate-view>` custom element (`import "foliate-js/view.js"`); TXT is rendered manually in `reader.$bookId.tsx`.
+- Formats are detected by extension only (`formatFrom` in `src/services/library.ts`): EPUB, MOBI, AZW3, TXT. Anything else throws on import.
+- EPUB/MOBI/AZW3 all open through the npm `foliate-js` `<foliate-view>` element (`import "foliate-js/view.js"`, `makeBook` for metadata/cover); TXT is rendered manually in `reader.$bookId.tsx`. `bookFileMeta()` maps a format to the extension/MIME used when the reader rebuilds the stored blob into a `File`.
 - `foliate-js` ships no TS types. `reader.$bookId.tsx` defines a local `FoliateView` type and casts the element; extend that type when using more of its API.
 - Don't change storage keys/DB names without migration: IndexedDB `eflow-reader` / `book-files`, `eflow-library-v2`, `eflow-reader-settings-v1`, `app-theme`.
-- Progress is percent + EPUB CFI, never page numbers. `relocate` writes are debounced 800 ms; reader settings are effect dependencies, so changing them re-opens the book.
+- Progress is percent + CFI, never page numbers. `relocate` saves are debounced 800 ms. Typography/theme changes only call `renderer.setStyles` in a separate effect, so they repaginate without reopening; changing `bookId` or the book's format does reopen.
+- Cleanup is delicate: `foliate-js` may finish `open()` after the effect was torn down, so the reader effect uses a `cancelled` flag plus `closeView()` (close, clear `renderer`, remove). Keep that shape when editing it.
 - Zustand stores live in `src/services/library.ts` (books: hydrate/import/progress/remove) and `src/services/reader-settings.ts`.
 
 ## Android / Tauri native
 
 - `src-tauri/plugins/system-bars` is a local Tauri plugin (Rust → Kotlin) registered in `src-tauri/src/lib.rs`; it makes the bars edge-to-edge and returns insets. Permission `system-bars:default` is in `src-tauri/capabilities/default.json`.
-- `src-tauri/gen/android` is tracked and contains hand-edited files (`MainActivity.kt` for edge-to-edge/insets, `app/build.gradle.kts` for conditional release signing). Re-running `tauri android init` overwrites them — back up/merge. Never commit `release.jks` or `keystore.properties`.
+- `src-tauri/gen/android` is tracked and contains hand-edited files (`MainActivity.kt` for edge-to-edge/insets, `app/build.gradle.kts` for conditional release signing, icon resources). Re-running `tauri android init` overwrites them — back up/merge. Build outputs there are covered by its own `.gitignore`.
 - Desktop runs with `decorations: false`; the custom title bar uses window APIs allowed by `src-tauri/capabilities/desktop-window-controls.json`. Add permissions there when adding window commands.
-- `tauri.conf.json` still uses template identity (`tauri-app` / `tauri.app`), and the Android package is `tauri.app` in `gen/android/app/build.gradle.kts`. Update all of them together if renaming.
+- Identity is split: `productName`/window `title` are 阅流, but `identifier`, Android `namespace` and `applicationId` are still `tauri.app`. Rename them together if the app is ever repackaged.
 
 ## Docs
 
-`docs/*.md` are Chinese design/exploration notes, not a spec of current code. They describe a future SQLite/Rust `book://` design and a MainActivity-only safe-area bridge. Release signing is implemented in `app/build.gradle.kts` and documented in `docs/签名问题.md`. Trust source and config over these docs.
+`docs/*.md` are Chinese design/exploration notes, not a spec of current code: they describe a future SQLite/Rust `book://` design and a MainActivity-only safe-area bridge. `docs/readme.md` is an outdated copy of the old README — edit the root `README.md` instead. Release signing is implemented in `app/build.gradle.kts` and documented in `docs/签名问题.md`. Trust source and config over these docs.

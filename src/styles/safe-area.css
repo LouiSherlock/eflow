@@ -156,30 +156,42 @@ body {
 
 .desktop-window-control:hover,
 .desktop-window-control:focus-visible {
+  /* Mix against the titlebar colour: mixing over `surface` was nearly the same
+     shade as the bar, so the hover state was invisible. */
   background-color: color-mix(
     in srgb,
-    var(--color-text-primary) 10%,
-    var(--color-background-surface)
+    var(--color-text-primary) 14%,
+    var(--color-background-muted)
   );
 }
 
 .desktop-window-control:active {
   background-color: color-mix(
     in srgb,
-    var(--color-text-primary) 18%,
-    var(--color-background-surface)
+    var(--color-text-primary) 24%,
+    var(--color-background-muted)
   );
 }
 
 .desktop-close-button {
   --desktop-close-icon-color: var(--color-text-primary);
+  /*
+   * The gothic theme's `--color-error` is a muted rose (#c6a6a2), too washed
+   * out for a window close button, so it gets its own saturated Windows red.
+   */
+  --desktop-close-bg: #e81123;
+  --desktop-close-bg-active: #f13a4b;
 }
 
 .desktop-close-button:hover,
 .desktop-close-button:focus-visible {
   --desktop-close-icon-color: var(--color-on-dark);
   color: var(--color-on-dark);
-  background-color: var(--color-error);
+  background-color: var(--desktop-close-bg);
+}
+
+.desktop-close-button:active {
+  background-color: var(--desktop-close-bg-active);
 }
 
 .secondary-app-bar {

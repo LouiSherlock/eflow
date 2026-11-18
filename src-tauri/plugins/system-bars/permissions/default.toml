@@ -1,5 +1,5 @@
 "$schema" = "schemas/schema.json"
 
 [default]
-description = "Default permissions for the system-bars plugin: apply the system bar theme, read the safe-area insets, and keep the screen awake."
-permissions = ["allow-set-theme", "allow-get-insets", "allow-set-keep-screen-on"]
+description = "Default permissions for the system-bars plugin: apply the system bar theme, read the safe-area insets, keep the screen awake, and control window brightness."
+permissions = ["allow-set-theme", "allow-get-insets", "allow-set-keep-screen-on", "allow-set-brightness"]

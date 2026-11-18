@@ -8,14 +8,17 @@ import { Icon } from "@astryxdesign/core/Icon";
 import { IconButton } from "@astryxdesign/core/IconButton";
 import { Text } from "@astryxdesign/core/Text";
 import { Spinner } from "@astryxdesign/core/Spinner";
+import { Slider } from "@astryxdesign/core/Slider";
 import { VStack } from "@astryxdesign/core/VStack";
-import { ChevronRight, CircleAlert, List, X } from "lucide-react";
+import { ChevronRight, CircleAlert, List, Sun, X } from "lucide-react";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { SecondaryAppBar } from "../components/secondary-app-bar";
 import { useKeepScreenOn } from "../hooks/use-keep-screen-on";
 import { useThemeMode } from "../providers/theme-provider";
+import { applyEyeCare, clearEyeCare } from "../services/eye-care";
 import { bookFileMeta, getBookFile, useLibrary } from "../services/library";
 import { useReaderSettings } from "../services/reader-settings";
+import { hasNativeSystemBars } from "../services/system-bars";
 
 export const Route = createFileRoute("/reader/$bookId")({ component: ReaderPage });
 
@@ -132,10 +135,28 @@ function ReaderPage() {
   const [isTocOpen, setIsTocOpen] = useState(false);
   const [expandedToc, setExpandedToc] = useState<ReadonlySet<string>>(() => new Set());
   const [isFontOpen, setIsFontOpen] = useState(false);
+  const [isEyeCareOpen, setIsEyeCareOpen] = useState(false);
   const [fontPreview, setFontPreview] = useState(settings.fontScale);
   const [chromeActivity, setChromeActivity] = useState(0);
 
   useKeepScreenOn(Boolean(book));
+
+  useEffect(() => {
+    void applyEyeCare(settings);
+  }, [settings.followSystem, settings.level, settings.warm]);
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        void applyEyeCare(useReaderSettings.getState());
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+      void clearEyeCare();
+    };
+  }, []);
 
   function goBack() {
     if (router.history.canGoBack()) {
@@ -181,10 +202,10 @@ function ReaderPage() {
 
   // Hide the chrome again after five seconds without any interaction.
   useEffect(() => {
-    if (!isChromeVisible || isTocOpen || isFontOpen) return;
+    if (!isChromeVisible || isTocOpen || isFontOpen || isEyeCareOpen) return;
     const timeout = window.setTimeout(() => setIsChromeVisible(false), 5000);
     return () => window.clearTimeout(timeout);
-  }, [isChromeVisible, isTocOpen, isFontOpen, chromeActivity]);
+  }, [isChromeVisible, isTocOpen, isFontOpen, isEyeCareOpen, chromeActivity]);
 
   useEffect(() => {
     if (!isChromeVisible) return;
@@ -339,8 +360,74 @@ function ReaderPage() {
       >
         <SecondaryAppBar className="reader-chrome reader-chrome-top" title={book.title} onBack={goBack}>
           {textReader ? null : <Button label="Aa" variant="ghost" size="lg" onClick={() => setIsFontOpen(true)} />}
+          <IconButton
+            label="阅读亮度与色温"
+            variant="ghost"
+            icon={<Icon icon={Sun} />}
+            onClick={() => setIsEyeCareOpen(true)}
+          />
         </SecondaryAppBar>
       </motion.div> : null}
+    </AnimatePresence>
+    <AnimatePresence>
+      {isEyeCareOpen ? <motion.section
+        key="reader-eye-care"
+        className="reader-eye-care-panel"
+        aria-label="阅读亮度与色温"
+        initial={{ opacity: 0, scale: 0.94, y: -8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: -6 }}
+        transition={{ duration: 0.16, ease: "easeOut" }}
+        style={{ transformOrigin: "top right" }}
+      >
+        <HStack align="center" justify="between" gap={2}>
+          <Heading level={5}>阅读舒适度</Heading>
+          <HStack align="center" gap={1}>
+            <Button
+              label="重置"
+              size="sm"
+              variant="ghost"
+              onClick={() => settings.update({ level: 1, followSystem: true, warm: 0 })}
+            />
+            <IconButton label="关闭阅读舒适度" variant="ghost" icon={<Icon icon={X} />} onClick={() => setIsEyeCareOpen(false)} />
+          </HStack>
+        </HStack>
+        <Text type="supporting" color="secondary">
+          {hasNativeSystemBars() ? "亮度应用于当前应用窗口。" : "桌面端通过页面调暗，系统亮度请在系统设置中调整。"}
+        </Text>
+        <Slider
+          label="阅读亮度"
+          min={0}
+          max={100}
+          step={1}
+          value={Math.round(settings.level * 100)}
+          valueDisplay="text"
+          formatValue={(value) => `${Math.round(value)}%`}
+          onChange={(value: number | [number, number]) => {
+            if (typeof value === "number") {
+              settings.update({ level: value / 100, followSystem: false });
+            }
+          }}
+        />
+        <Button
+          label={settings.followSystem ? "跟随系统亮度 · 已开启" : "跟随系统亮度 · 已关闭"}
+          size="sm"
+          variant="secondary"
+          onClick={() => settings.update({ followSystem: !settings.followSystem })}
+        />
+        <Slider
+          label="暖色强度"
+          min={0}
+          max={100}
+          step={1}
+          value={Math.round(settings.warm * 100)}
+          valueDisplay="text"
+          formatValue={(value) => `${Math.round(value)}%`}
+          onChange={(value: number | [number, number]) => {
+            if (typeof value === "number") settings.update({ warm: value / 100 });
+          }}
+        />
+      </motion.section> : null}
     </AnimatePresence>
     <AnimatePresence>
       {isChromeVisible && !textReader ? <motion.div
@@ -353,20 +440,26 @@ function ReaderPage() {
       >
         <HStack as="footer" className="reader-chrome reader-chrome-bottom" align="center" gap={3}>
           <IconButton label="目录" variant="ghost" icon={<Icon icon={List} />} onClick={() => setIsTocOpen(true)} />
-          <input
-            className="reader-slider"
-            type="range"
+          <Slider
+            containerClassName="reader-slider"
+            label="阅读进度"
+            isLabelHidden
             min={0}
             max={100}
             step={1}
-            aria-label="阅读进度"
             value={Math.round(isScrubbing ? scrubValue : progress)}
-            onChange={(event) => { setIsScrubbing(true); setScrubValue(Number(event.target.value)); }}
-            onPointerUp={(event) => seekTo(Number(event.currentTarget.value))}
-            onKeyUp={(event) => seekTo(Number(event.currentTarget.value))}
-            onBlur={() => setIsScrubbing(false)}
+            valueDisplay="none"
+            onChange={(value: number | [number, number]) => {
+              if (typeof value === "number") {
+                setIsScrubbing(true);
+                setScrubValue(value);
+              }
+            }}
+            onChangeEnd={(value: number | [number, number]) => {
+              if (typeof value === "number") seekTo(value);
+            }}
           />
-          <Text type="supporting" color="secondary">{Math.round(progress)}%</Text>
+          <Text type="supporting" color="secondary">{Math.round(isScrubbing ? scrubValue : progress)}%</Text>
         </HStack>
       </motion.div> : null}
     </AnimatePresence>

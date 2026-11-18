@@ -88,9 +88,37 @@ async fn set_keep_screen_on<R: Runtime>(app: AppHandle<R>, enabled: bool) -> Res
     }
 }
 
+/// Sets the Android window brightness, or follows the system when `value` is
+/// `None`. Other platforms keep their native brightness unchanged.
+#[tauri::command]
+async fn set_brightness<R: Runtime>(
+    app: AppHandle<R>,
+    value: Option<f32>,
+) -> Result<(), String> {
+    #[cfg(target_os = "android")]
+    {
+        app.state::<SystemBars<R>>()
+            .handle
+            .run_mobile_plugin_async::<()>("set_brightness", json!({ "value": value }))
+            .await
+            .map_err(|error| error.to_string())
+    }
+
+    #[cfg(not(target_os = "android"))]
+    {
+        let _ = (&app, value);
+        Ok(())
+    }
+}
+
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("system-bars")
-        .invoke_handler(tauri::generate_handler![set_theme, get_insets, set_keep_screen_on])
+        .invoke_handler(tauri::generate_handler![
+            set_theme,
+            get_insets,
+            set_keep_screen_on,
+            set_brightness
+        ])
         .setup(|app, api| {
             #[cfg(target_os = "android")]
             {

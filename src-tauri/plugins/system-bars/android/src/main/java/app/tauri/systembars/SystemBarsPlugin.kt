@@ -25,6 +25,11 @@ class KeepScreenOnArgs {
   var enabled: Boolean = false
 }
 
+@InvokeArg
+class BrightnessArgs {
+  var value: Float? = null
+}
+
 /**
  * Paints the window edge-to-edge so the web page background runs behind the
  * system bars, and keeps the bar icons readable for the active theme.
@@ -93,6 +98,22 @@ class SystemBarsPlugin(private val activity: Activity) : Plugin(activity) {
         activity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
       }
 
+      invoke.resolve()
+    }
+  }
+
+  /**
+   * Sets brightness for this app's window only; null restores system control.
+   */
+  @Command
+  fun set_brightness(invoke: Invoke) {
+    val args = invoke.parseArgs(BrightnessArgs::class.java)
+
+    activity.runOnUiThread {
+      val layoutParams = activity.window.attributes
+      layoutParams.screenBrightness = args.value?.coerceIn(0.02f, 1f)
+        ?: WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+      activity.window.attributes = layoutParams
       invoke.resolve()
     }
   }

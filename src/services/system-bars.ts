@@ -58,6 +58,20 @@ export async function setKeepScreenOn(enabled: boolean): Promise<void> {
 }
 
 /**
+ * Sets app-window brightness on Android. Passing null returns control to the
+ * system without changing its saved brightness.
+ */
+export async function setWindowBrightness(value: number | null): Promise<void> {
+  if (!hasNativeSystemBars()) return;
+
+  try {
+    await invoke(`${ANDROID_PLUGIN}|set_brightness`, { value });
+  } catch (error) {
+    console.error("Failed to set Android window brightness:", error);
+  }
+}
+
+/**
  * Keeps the status and navigation bar icons readable against the page
  * background (dark icons on light, light icons on dark).
  */

@@ -9,10 +9,13 @@
     />
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' blob: data:; img-src 'self' blob: data:; style-src 'self' 'unsafe-inline' blob: data:; font-src 'self' blob: data:; media-src 'self' blob: data:; script-src 'self'; connect-src 'self' http://localhost:* ws://localhost:*; worker-src 'self' blob:;" />
     <title>阅流</title>
+    <script src="/eye-care-init.js"></script>
   </head>
 
   <body>
     <div id="root"></div>
+    <div id="eye-care-warm-layer" aria-hidden="true"></div>
+    <div id="eye-care-dim-layer" aria-hidden="true"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -449,6 +449,14 @@ html[data-eye-care-active="true"][data-eye-care-dim="true"] #eye-care-dim-layer 
 }
 
 /* Custom font-size popover: step buttons, a live slider and the align toggle. */
+.text-reader-paragraph {
+  margin-block: calc(var(--spacing-4) * var(--reader-paragraph-spacing, 1));
+  font-size: calc(var(--font-size-lg) * var(--reader-font-scale, 1));
+  line-height: var(--reader-line-height, var(--line-height-relaxed));
+  text-align: var(--reader-text-align, start);
+  text-indent: 2em;
+}
+
 .reader-font-panel,
 .reader-eye-care-panel {
   position: absolute;
@@ -495,7 +503,6 @@ html[data-eye-care-active="true"][data-eye-care-dim="true"] #eye-care-dim-layer 
 .reader-font-slider {
   flex: 1 1 auto;
   min-width: 0;
-  accent-color: var(--color-accent);
 }
 
 .reader-font-toggle {

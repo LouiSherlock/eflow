@@ -35,7 +35,7 @@ function HelpPage() {
         />
         <ListItem
           label="可以调整字号和排版吗？"
-          description={<Answer>可以。在「我的 → 阅读设置」里调整字号和两端对齐，电子书会在下一次翻页时应用新设置。</Answer>}
+          description={<Answer>可以。在阅读器中点击「Aa」调整字号和两端对齐；设置会保存在本机，并应用于所有书籍。</Answer>}
         />
         <ListItem
           label="阅读进度保存在哪里？"

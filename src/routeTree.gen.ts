@@ -17,7 +17,6 @@ import { Route as HelpPageRouteImport } from './routes/help/page'
 import { Route as ProfilePageRouteImport } from './routes/profile/page'
 import { Route as ReaderPageRouteImport } from './routes/reader/page'
 import { Route as SearchPageRouteImport } from './routes/search/page'
-import { Route as SettingsPageRouteImport } from './routes/settings/page'
 import { Route as BookBookIdPageRouteImport } from './routes/book/$bookId/page'
 import { Route as ReaderBookIdPageRouteImport } from './routes/reader/$bookId/page'
 
@@ -61,11 +60,6 @@ const SearchPageRoute = SearchPageRouteImport.update({
   path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SettingsPageRoute = SettingsPageRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const BookBookIdPageRoute = BookBookIdPageRouteImport.update({
   id: '/$bookId',
   path: '/$bookId',
@@ -86,7 +80,6 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfilePageRoute
   '/reader': typeof ReaderPageRouteWithChildren
   '/search': typeof SearchPageRoute
-  '/settings': typeof SettingsPageRoute
   '/book/$bookId': typeof BookBookIdPageRoute
   '/reader/$bookId': typeof ReaderBookIdPageRoute
 }
@@ -99,7 +92,6 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfilePageRoute
   '/reader': typeof ReaderPageRouteWithChildren
   '/search': typeof SearchPageRoute
-  '/settings': typeof SettingsPageRoute
   '/book/$bookId': typeof BookBookIdPageRoute
   '/reader/$bookId': typeof ReaderBookIdPageRoute
 }
@@ -113,7 +105,6 @@ export interface FileRoutesById {
   '/profile': typeof ProfilePageRoute
   '/reader': typeof ReaderPageRouteWithChildren
   '/search': typeof SearchPageRoute
-  '/settings': typeof SettingsPageRoute
   '/book/$bookId': typeof BookBookIdPageRoute
   '/reader/$bookId': typeof ReaderBookIdPageRoute
 }
@@ -128,7 +119,6 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reader'
     | '/search'
-    | '/settings'
     | '/book/$bookId'
     | '/reader/$bookId'
   fileRoutesByTo: FileRoutesByTo
@@ -141,7 +131,6 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reader'
     | '/search'
-    | '/settings'
     | '/book/$bookId'
     | '/reader/$bookId'
   id:
@@ -154,7 +143,6 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reader'
     | '/search'
-    | '/settings'
     | '/book/$bookId'
     | '/reader/$bookId'
   fileRoutesById: FileRoutesById
@@ -168,7 +156,6 @@ export interface RootRouteChildren {
   ProfilePageRoute: typeof ProfilePageRoute
   ReaderPageRoute: typeof ReaderPageRouteWithChildren
   SearchPageRoute: typeof SearchPageRoute
-  SettingsPageRoute: typeof SettingsPageRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -229,13 +216,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SearchPageRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsPageRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/book/$bookId': {
       id: '/book/$bookId'
       path: '/$bookId'
@@ -286,7 +266,6 @@ const rootRouteChildren: RootRouteChildren = {
   ProfilePageRoute: ProfilePageRoute,
   ReaderPageRoute: ReaderPageRouteWithChildren,
   SearchPageRoute: SearchPageRoute,
-  SettingsPageRoute: SettingsPageRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

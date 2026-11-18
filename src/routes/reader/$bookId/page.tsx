@@ -1,6 +1,6 @@
 import "foliate-js/view.js";
 import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Button } from "@astryxdesign/core/Button";
 import { Heading } from "@astryxdesign/core/Heading";
 import { HStack } from "@astryxdesign/core/HStack";
@@ -343,7 +343,15 @@ function ReaderPage() {
   const textReader = book.format === "TXT";
   return <MotionConfig reducedMotion="user"><VStack className="reader-page" gap={0}>
     {textReader
-      ? <div ref={textHostRef} className="text-reader-host" onClick={handleTextTap}><TextReader bookId={book.id} /></div>
+      ? <div ref={textHostRef} className="text-reader-host" onClick={handleTextTap}>
+        <TextReader
+          bookId={book.id}
+          fontScale={settings.fontScale}
+          lineHeight={settings.lineHeight}
+          paragraphSpacing={settings.paragraphSpacing}
+          justify={settings.justify}
+        />
+      </div>
       : <>
         <section ref={hostRef} className="foliate-host" aria-label="电子书阅读区" />
         <button type="button" tabIndex={-1} aria-label="上一页" className="reader-tap-zone reader-tap-zone-left" onClick={() => void viewRef.current?.prev()} />
@@ -359,7 +367,7 @@ function ReaderPage() {
         transition={{ duration: 0.18, ease: "easeOut" }}
       >
         <SecondaryAppBar className="reader-chrome reader-chrome-top" title={book.title} onBack={goBack}>
-          {textReader ? null : <Button label="Aa" variant="ghost" size="lg" onClick={() => setIsFontOpen(true)} />}
+          <Button label="Aa" variant="ghost" size="lg" onClick={() => setIsFontOpen(true)} />
           <IconButton
             label="阅读亮度与色温"
             variant="ghost"
@@ -515,17 +523,21 @@ function ReaderPage() {
         </HStack>
         <HStack className="reader-font-row" align="center" gap={2}>
           <button type="button" className="reader-font-step" aria-label="减小字号" onClick={() => commitFont(settings.fontScale - 0.1)}>A−</button>
-          <input
-            className="reader-font-slider"
-            type="range"
+          <Slider
+            containerClassName="reader-font-slider"
+            label="字号大小"
+            isLabelHidden
             min={FONT_MIN}
             max={FONT_MAX}
             step={0.1}
-            aria-label="字号大小"
             value={fontPreview}
-            onChange={(event) => setFontPreview(Number(event.target.value))}
-            onPointerUp={(event) => commitFont(Number(event.currentTarget.value))}
-            onKeyUp={(event) => commitFont(Number(event.currentTarget.value))}
+            valueDisplay="none"
+            onChange={(value: number | [number, number]) => {
+              if (typeof value === "number") setFontPreview(value);
+            }}
+            onChangeEnd={(value: number | [number, number]) => {
+              if (typeof value === "number") commitFont(value);
+            }}
           />
           <button type="button" className="reader-font-step" aria-label="增大字号" onClick={() => commitFont(settings.fontScale + 0.1)}>A+</button>
         </HStack>
@@ -559,8 +571,26 @@ function ReaderPage() {
   </VStack></MotionConfig>;
 }
 
-function TextReader({ bookId }: { bookId: string }) {
+function TextReader({
+  bookId,
+  fontScale,
+  lineHeight,
+  paragraphSpacing,
+  justify,
+}: {
+  bookId: string;
+  fontScale: number;
+  lineHeight: number;
+  paragraphSpacing: number;
+  justify: boolean;
+}) {
   const [text, setText] = useState("");
   useEffect(() => { void getBookFile(bookId).then((file) => file?.file.text().then(setText)); }, [bookId]);
-  return <section className="text-reader" aria-label="TXT 正文">{text.split(/\r?\n/).filter(Boolean).map((paragraph, index) => <Text key={index} className="text-reader-paragraph" type="body" display="block">{paragraph}</Text>)}</section>;
+  const readerStyle = {
+    "--reader-font-scale": fontScale,
+    "--reader-line-height": lineHeight,
+    "--reader-paragraph-spacing": paragraphSpacing,
+    "--reader-text-align": justify ? "justify" : "start",
+  } as CSSProperties;
+  return <section className="text-reader" aria-label="TXT 正文" style={readerStyle}>{text.split(/\r?\n/).filter(Boolean).map((paragraph, index) => <Text key={index} className="text-reader-paragraph" type="body" display="block">{paragraph}</Text>)}</section>;
 }

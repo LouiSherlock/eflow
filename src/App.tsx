@@ -44,7 +44,6 @@ const ROUTE_LABELS: Record<string, string> = {
   "/favorites": "收藏",
   "/profile": "我的",
   "/search": "搜索",
-  "/settings": "阅读设置",
   "/about": "关于",
   "/help": "帮助",
   "/book/$bookId": "书籍详情",

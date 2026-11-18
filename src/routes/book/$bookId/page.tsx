@@ -36,7 +36,7 @@ function BookPage() {
     <HStack className="book-stat-row" align="center" justify="around" gap={3}><VStack align="center" gap={0}><Text type="supporting" color="secondary">格式</Text><Text type="body">{book.format}</Text></VStack><VStack align="center" gap={0}><Text type="supporting" color="secondary">进度</Text><Text type="body">{Math.round(book.progress)}%</Text></VStack><VStack align="center" gap={0}><Text type="supporting" color="secondary">大小</Text><Text type="body">{formatSize(book.size)}</Text></VStack></HStack>
     <HStack align="center" gap={2}>
       <StackItem size="fill">
-        <Button label={isStarted ? "继续阅读" : "开始阅读"} size="lg" width="100%" variant="primary" icon={<Icon icon={isStarted ? BookOpen : Play} />} onClick={() => void navigate({ to: "/reader/$bookId", params: { bookId } })} />
+        <Button label={isStarted ? "继续阅读" : "开始阅读"} size="lg" width="100%" variant="primary" icon={<Icon icon={isStarted ? BookOpen : Play} />} onClick={() => void navigate({ to: "/reader/$bookId", params: { bookId }, replace: true })} />
       </StackItem>
       <IconButton
         label={book.isFavorite ? "取消收藏" : "收藏"}

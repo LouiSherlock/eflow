@@ -19,11 +19,11 @@ function HelpPage() {
       <List density="spacious" hasDividers>
         <ListItem
           label="能导入什么格式的？"
-          description={<Answer>支持标准 EPUB 和纯文本 TXT。加密或受 DRM 保护的 EPUB 无法打开，PDF、MOBI 等格式暂不支持。</Answer>}
+          description={<Answer>支持标准 EPUB、MOBI、AZW3 和纯文本 TXT。加密或受 DRM 保护的文件无法打开，PDF 等格式暂不支持。</Answer>}
         />
         <ListItem
           label="如何运作？"
-          description={<Answer>导入的书籍和封面保存在本机浏览器数据库，书架、收藏和阅读进度记录在本地。打开 EPUB 时会按当前字号重新分页。</Answer>}
+          description={<Answer>导入的书籍和封面保存在本机浏览器数据库，书架、收藏和阅读进度记录在本地。打开电子书时会按当前字号重新分页。</Answer>}
         />
         <ListItem
           label="是否会上传我的书籍？"
@@ -35,11 +35,11 @@ function HelpPage() {
         />
         <ListItem
           label="可以调整字号和排版吗？"
-          description={<Answer>可以。在「我的 → 阅读设置」里调整字号、两端对齐和深浅色主题，EPUB 会在下一次翻页时应用新设置。</Answer>}
+          description={<Answer>可以。在「我的 → 阅读设置」里调整字号和两端对齐，电子书会在下一次翻页时应用新设置。</Answer>}
         />
         <ListItem
           label="阅读进度保存在哪里？"
-          description={<Answer>进度按百分比和 EPUB 阅读位置保存在本机，翻页后自动记录。换设备或清除应用数据后不会同步。</Answer>}
+          description={<Answer>进度按百分比和阅读位置保存在本机，翻页后自动记录。换设备或清除应用数据后不会同步。</Answer>}
         />
         <ListItem
           label="删除书籍后还能恢复吗？"

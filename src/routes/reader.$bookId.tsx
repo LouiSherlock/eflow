@@ -14,7 +14,7 @@ import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { SecondaryAppBar } from "../components/secondary-app-bar";
 import { useKeepScreenOn } from "../hooks/use-keep-screen-on";
 import { useThemeMode } from "../providers/theme-provider";
-import { getBookFile, useLibrary } from "../services/library";
+import { bookFileMeta, getBookFile, useLibrary } from "../services/library";
 import { useReaderSettings } from "../services/reader-settings";
 
 export const Route = createFileRoute("/reader/$bookId")({ component: ReaderPage });
@@ -214,7 +214,7 @@ function ReaderPage() {
         const stored = await getBookFile(selectedBook.id);
         if (cancelled) return;
         if (!stored || cancelled) throw new Error("找不到本地书籍文件，请重新导入。");
-        const file = new File([stored.file], `${selectedBook.title}.epub`, { type: "application/epub+zip" });
+        const file = new File([stored.file], `${selectedBook.title}.${bookFileMeta(selectedBook.format).ext}`, { type: bookFileMeta(selectedBook.format).type });
         view = document.createElement("foliate-view") as FoliateView;
         const currentView = view;
         view.addEventListener("relocate", ((event: CustomEvent<RelocateDetail>) => {
@@ -274,7 +274,7 @@ function ReaderPage() {
         else closeView(currentView);
       } catch (reason) {
         if (view) closeView(view);
-        if (!cancelled) { setError(reason instanceof Error ? reason.message : "无法打开这本 EPUB。"); setStatus("error"); }
+        if (!cancelled) { setError(reason instanceof Error ? reason.message : "无法打开这本书。"); setStatus("error"); }
       }
     };
     void open();
@@ -292,7 +292,7 @@ function ReaderPage() {
 
   // Desktop keyboards: the arrow keys turn the page like tapping the edges.
   useEffect(() => {
-    if (book?.format !== "EPUB") return;
+    if (!book || book.format === "TXT") return;
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
       if (target?.closest("input, textarea, [contenteditable='true']")) return;
@@ -309,7 +309,7 @@ function ReaderPage() {
     {textReader
       ? <div ref={textHostRef} className="text-reader-host" onClick={handleTextTap}><TextReader bookId={book.id} /></div>
       : <>
-        <section ref={hostRef} className="foliate-host" aria-label="EPUB 阅读区" />
+        <section ref={hostRef} className="foliate-host" aria-label="电子书阅读区" />
         <button type="button" tabIndex={-1} aria-label="上一页" className="reader-tap-zone reader-tap-zone-left" onClick={() => void viewRef.current?.prev()} />
         <button type="button" tabIndex={-1} aria-label="下一页" className="reader-tap-zone reader-tap-zone-right" onClick={() => void viewRef.current?.next()} />
       </>}
@@ -442,7 +442,7 @@ function ReaderPage() {
       <VStack className="reader-state-card" align="center" gap={3} padding={6}>
         <Icon className="reader-state-icon" icon={CircleAlert} />
         <VStack align="center" gap={1}>
-          <Heading level={4}>无法打开 EPUB</Heading>
+          <Heading level={4}>无法打开这本书</Heading>
           <Text type="body" color="secondary">{error}</Text>
         </VStack>
         <Button label="返回详情" onClick={() => void navigate({ to: "/book/$bookId", params: { bookId } })} />

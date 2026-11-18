@@ -18,7 +18,7 @@ function AboutPage() {
       <Section padding={4} dividers={["bottom"]}>
         <VStack gap={1}>
           <Heading level={3}>阅流</Heading>
-          <Text type="supporting" color="secondary">本地离线 EPUB / TXT 阅读器</Text>
+          <Text type="supporting" color="secondary">本地离线阅读器</Text>
           <Text type="supporting" color="secondary">版本 {__APP_VERSION__}</Text>
         </VStack>
       </Section>

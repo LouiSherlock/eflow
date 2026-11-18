@@ -16,7 +16,7 @@ function SettingsPage() {
       <VStack gap={3}>
         <VStack gap={1}>
           <Heading level={5}>阅读排版</Heading>
-          <Text type="supporting" color="secondary">这些设置会在下一次翻页时应用到 EPUB。</Text>
+          <Text type="supporting" color="secondary">这些设置会在下一次翻页时应用到电子书。</Text>
         </VStack>
         <HStack align="center" justify="between">
           <HStack align="center" gap={2}>

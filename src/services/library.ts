@@ -1,7 +1,7 @@
 import { makeBook } from "foliate-js/view.js";
 import { create } from "zustand";
 
-export type BookFormat = "EPUB" | "TXT";
+export type BookFormat = "EPUB" | "TXT" | "MOBI" | "AZW3";
 export type Book = { id: string; title: string; author: string; format: BookFormat; size: number; progress: number; cfi?: string; isFavorite?: boolean; addedAt: number; updatedAt: number; cover?: Blob };
 type StoredFile = { id: string; file: Blob; cover?: Blob };
 type LibraryState = { books: Book[]; isReady: boolean; hydrate: () => Promise<void>; importBook: (file: File) => Promise<Book>; updateProgress: (id: string, progress: number, cfi?: string) => void; toggleFavorite: (id: string) => void; removeBook: (id: string) => Promise<void> };
@@ -36,7 +36,25 @@ function humanText(value: unknown): string {
   if (value && typeof value === "object") { const record = value as Record<string, unknown>; return humanText(record.name ?? Object.values(record)[0]); }
   return "";
 }
-function formatFrom(file: File): BookFormat | null { const extension = file.name.split(".").pop()?.toLowerCase(); return extension === "epub" ? "EPUB" : extension === "txt" ? "TXT" : null; }
+function formatFrom(file: File): BookFormat | null {
+  const extension = file.name.split(".").pop()?.toLowerCase();
+  if (extension === "epub") return "EPUB";
+  if (extension === "txt") return "TXT";
+  if (extension === "mobi") return "MOBI";
+  if (extension === "azw3") return "AZW3";
+  return null;
+}
+
+const BOOK_FILE_META: Record<Exclude<BookFormat, "TXT">, { ext: string; type: string }> = {
+  EPUB: { ext: "epub", type: "application/epub+zip" },
+  MOBI: { ext: "mobi", type: "application/x-mobipocket-ebook" },
+  AZW3: { ext: "azw3", type: "application/vnd.amazon.ebook" },
+};
+
+/** File name and MIME type the reader rebuilds the stored blob with. */
+export function bookFileMeta(format: BookFormat) {
+  return format === "TXT" ? { ext: "txt", type: "text/plain" } : BOOK_FILE_META[format];
+}
 
 /**
  * Reads the title a file would get on import, without storing anything.
@@ -65,12 +83,12 @@ export const useLibrary = create<LibraryState>((set, get) => ({
   },
   importBook: async (file) => {
     const format = formatFrom(file);
-    if (!format) throw new Error("仅支持 EPUB 和 TXT 文件。");
+    if (!format) throw new Error("仅支持 EPUB、MOBI、AZW3 和 TXT 文件。");
     const id = crypto.randomUUID();
     let title = file.name.replace(/\.[^.]+$/, "");
     let author = "未知作者";
     let cover: Blob | undefined;
-    if (format === "EPUB") {
+    if (format !== "TXT") {
       const parsed = await makeBook(file);
       title = humanText(parsed.metadata?.title) || title;
       author = humanText(parsed.metadata?.author) || author;

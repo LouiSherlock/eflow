@@ -1,19 +1,10 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  type ReactNode,
-} from "react";
+import { useEffect, type ReactNode } from "react";
 
-import { updateNativeTheme, type ResolvedTheme } from "../services/theme";
+import { updateNativeTheme, useThemeStore } from "../services/theme";
 
 interface ThemeModeContextValue {
-  /** The app ships one dark theme, so this is always "dark". */
-  theme: ResolvedTheme;
+  theme: "light" | "dark";
 }
-
-const ThemeModeContext = createContext<ThemeModeContextValue | null>(null);
 
 /**
  * Owns the app's single resolved theme.
@@ -23,7 +14,7 @@ const ThemeModeContext = createContext<ThemeModeContextValue | null>(null);
  * step with that one value.
  */
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const theme: ResolvedTheme = "dark";
+  const theme = useThemeStore((state) => state.theme);
 
   // Keep Tailwind's `dark:` variant and native form controls in step.
   useEffect(() => {
@@ -49,21 +40,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       document.removeEventListener("visibilitychange", handleVisibility);
   }, [theme]);
 
-  const value = useMemo(() => ({ theme }), [theme]);
-
-  return (
-    <ThemeModeContext.Provider value={value}>
-      {children}
-    </ThemeModeContext.Provider>
-  );
+  return children;
 }
 
 export function useThemeMode(): ThemeModeContextValue {
-  const context = useContext(ThemeModeContext);
-
-  if (!context) {
-    throw new Error("useThemeMode must be used inside ThemeProvider");
-  }
-
-  return context;
+  const theme = useThemeStore((state) => state.theme);
+  return { theme };
 }

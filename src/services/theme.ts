@@ -1,7 +1,13 @@
+import { create } from "zustand";
 import { setSystemBarTheme } from "./system-bars";
 
 export type ThemeMode = "system" | "light" | "dark";
 export type ResolvedTheme = "light" | "dark";
+
+type ThemeState = { theme: ResolvedTheme };
+
+/** App-wide resolved theme shared by the shell and reader. */
+export const useThemeStore = create<ThemeState>(() => ({ theme: "dark" }));
 
 const STORAGE_KEY = "app-theme";
 

@@ -5,7 +5,7 @@ import { List, ListItem } from "@astryxdesign/core/List";
 import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
 import { BookMarked, CircleHelp, Settings, UserRound } from "lucide-react";
-import { useLibrary } from "../services/library";
+import { useLibrary } from "../../services/library";
 
 export const Route = createFileRoute("/profile")({ component: ProfilePage });
 

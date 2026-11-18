@@ -18,6 +18,7 @@ export default defineConfig(() => ({
     tanstackRouter({
       target: "react",
       autoCodeSplitting: true,
+      routeToken: "page",
     }),
     react(),
     tailwindcss(),

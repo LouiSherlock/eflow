@@ -10,7 +10,7 @@ import { Text } from "@astryxdesign/core/Text";
 import { useToast } from "@astryxdesign/core/Toast";
 import { VStack } from "@astryxdesign/core/VStack";
 import { Bookmark, BookmarkCheck, BookOpen, Play } from "lucide-react";
-import { useLibrary } from "../services/library";
+import { useLibrary } from "../../../services/library";
 
 export const Route = createFileRoute("/book/$bookId")({ component: BookPage });
 

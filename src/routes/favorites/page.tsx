@@ -6,9 +6,9 @@ import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
 import { Bookmark } from "lucide-react";
 import { useState } from "react";
-import { BookGrid } from "../components/book-grid";
-import { RemoveBookDialog } from "../components/remove-book-dialog";
-import { type Book, useLibrary } from "../services/library";
+import { BookGrid } from "../../components/book-grid";
+import { RemoveBookDialog } from "../../components/remove-book-dialog";
+import { type Book, useLibrary } from "../../services/library";
 
 export const Route = createFileRoute("/favorites")({ component: FavoritesPage });
 

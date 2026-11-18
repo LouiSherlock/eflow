@@ -12,13 +12,13 @@ import { Slider } from "@astryxdesign/core/Slider";
 import { VStack } from "@astryxdesign/core/VStack";
 import { ChevronRight, CircleAlert, List, Sun, X } from "lucide-react";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
-import { SecondaryAppBar } from "../components/secondary-app-bar";
-import { useKeepScreenOn } from "../hooks/use-keep-screen-on";
-import { useThemeMode } from "../providers/theme-provider";
-import { applyEyeCare, clearEyeCare } from "../services/eye-care";
-import { bookFileMeta, getBookFile, useLibrary } from "../services/library";
-import { useReaderSettings } from "../services/reader-settings";
-import { hasNativeSystemBars } from "../services/system-bars";
+import { SecondaryAppBar } from "../../../components/secondary-app-bar";
+import { useKeepScreenOn } from "../../../hooks/use-keep-screen-on";
+import { useThemeMode } from "../../../providers/theme-provider";
+import { applyEyeCare, clearEyeCare } from "../../../services/eye-care";
+import { bookFileMeta, getBookFile, useLibrary } from "../../../services/library";
+import { useReaderSettings } from "../../../services/reader-settings";
+import { hasNativeSystemBars } from "../../../services/system-bars";
 
 export const Route = createFileRoute("/reader/$bookId")({ component: ReaderPage });
 

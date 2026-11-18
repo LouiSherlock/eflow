@@ -5,7 +5,7 @@ import { HStack } from "@astryxdesign/core/HStack";
 import { Section } from "@astryxdesign/core/Section";
 import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
-import { useReaderSettings } from "../services/reader-settings";
+import { useReaderSettings } from "../../services/reader-settings";
 
 export const Route = createFileRoute("/settings")({ component: SettingsPage });
 
